@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approved Forms</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .form-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-not_required {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .section-badge {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <a href="/dashboard" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 mb-6">
+        <span class="material-icons mr-1">arrow_back</span> Back to Dashboard
+    </a>
+    
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">All Approved Forms</h1>
+    
+    {% if forms %}
+        {% for form in forms %}
+        <div class="form-card">
+            <div class="flex justify-between items-center border-b pb-3 mb-3">
+                <div>
+                    <h3 class="text-lg font-bold">{{ form.form_type|upper }} Form</h3>
+                    <p class="text-gray-500 text-sm">#{{ form.id[:8] }}</p>
+                </div>
+                <span class="status status-{{ form.status }}">{{ form.status|upper }}</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <p class="text-gray-600 font-medium">Student:</p>
+                    <p>{{ form.student_name }} ({{ form.student_email }})</p>
+                    <div class="mt-1">
+                        <span class="section-badge">Year: {{ form.student_year }}</span>
+                        <span class="section-badge">Section: {{ form.student_section }}</span>
+                        <span class="section-badge">Dept: {{ form.student_department }}</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <p class="text-gray-600 font-medium">Submitted:</p>
+                    <p>{{ form.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                    
+                    {% if form.approved_at %}
+                    <p class="text-gray-600 font-medium mt-2">Approved At:</p>
+                    <p>{{ form.approved_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-gray-600 font-medium">Reason:</p>
+                <p>{{ form.reason }}</p>
+            </div>
+            
+            {% if form.form_type == 'od' %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <p class="text-gray-600 font-medium">Date:</p>
+                    <p>{{ form.date }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Time:</p>
+                    <p>{{ form.start_time }} to {{ form.end_time }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Duration:</p>
+                    <p>{{ form.duration }} hours</p>
+                </div>
+            </div>
+            {% elif form.form_type == 'leave' %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <p class="text-gray-600 font-medium">From:</p>
+                    <p>{{ form.start_date }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">To:</p>
+                    <p>{{ form.end_date }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Days:</p>
+                    <p>{{ form.days }}</p>
+                </div>
+            </div>
+            {% elif form.form_type == 'gate' %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <p class="text-gray-600 font-medium">Date:</p>
+                    <p>{{ form.date }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Out Time:</p>
+                    <p>{{ form.out_time }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Duration:</p>
+                    <p>{{ form.duration }} hours</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if form.approved_by %}
+            <div class="mb-4">
+                <p class="text-gray-600 font-medium">Approved By:</p>
+                <p>{{ form.approved_by|join(', ') }}</p>
+            </div>
+            {% endif %}
+            
+            <div>
+                <p class="text-gray-600 font-medium">HOD Status:</p>
+                <span class="status status-{{ form.hod_status }}">{{ form.hod_status|upper }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <p class="text-gray-600">No approved forms found.</p>
+        </div>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Form | Digital Forms System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-blue-600">Submit {{ form_type|upper }} Form</h1>
+            <a href="/dashboard" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50">
+                <span class="material-icons mr-1">arrow_back</span> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b">
+                <h2 class="text-lg font-medium text-gray-800">{{ form_type|upper }} Request Form</h2>
+            </div>
+            
+            <div class="p-6">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flex items-center p-4 mb-4 rounded-lg 
+                                {% if category == 'error' %}bg-red-100 text-red-700 border border-red-200
+                                {% else %}bg-green-100 text-green-700 border border-green-200{% endif %}">
+                                <span class="material-icons mr-2">
+                                    {% if category == 'error' %}error{% else %}check_circle{% endif %}
+                                </span>
+                                <div>{{ message }}</div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="bg-blue-50 p-4 rounded-lg mb-6 flex items-start">
+                    <span class="material-icons text-blue-600 mr-2">info</span>
+                    <div>
+                        <p class="font-medium">Student Information</p>
+                        <p>Year: {{ session.year }}, Section: {{ session.section }}, Department: {{ session.department }}</p>
+                    </div>
+                </div>
+
+                <form method="POST" id="formSubmission">
+                    <div class="mb-6">
+                        <label for="reason" class="block text-gray-700 font-medium mb-2">Reason *</label>
+                        <textarea id="reason" name="reason" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                                  placeholder="Explain the reason for your request" required></textarea>
+                    </div>
+                    
+                    {% if form_type == 'od' %}
+                        <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                            <p class="font-medium flex items-center">
+                                <span class="material-icons mr-2">info</span>
+                                You can only select faculty from your section: {{ session.section }}
+                            </p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-2">Date *</label>
+                                <input type="date" name="date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="start_time" class="block text-gray-700 font-medium mb-2">Start Time</label>
+                                    <input type="time" id="start_time" name="start_time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                <div>
+                                    <label for="end_time" class="block text-gray-700 font-medium mb-2">End Time</label>
+                                    <input type="time" id="end_time" name="end_time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="duration" class="block text-gray-700 font-medium mb-2">Duration (hours) *</label>
+                            <input type="number" id="duration" name="duration" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" min="0.5" step="0.5" required readonly>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-gray-700 font-medium mb-2">Select Faculty for Approval *</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {% if faculty %}
+                                    {% for fac in faculty %}
+                                    <div class="flex items-start">
+                                        <input type="checkbox" id="faculty_{{ loop.index }}" name="faculty" value="{{ fac.email }}" class="mt-1 mr-2">
+                                        <label for="faculty_{{ loop.index }}" class="flex-1">
+                                            <span class="font-medium">{{ fac.name }}</span>
+                                            {% if fac.coordinator_section == session.section %}
+                                                <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">COORDINATOR</span>
+                                            {% endif %}
+                                            <p class="text-sm text-gray-600">{{ fac.email }}</p>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-gray-600">No faculty available in your section</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    
+                    {% elif form_type == 'leave' %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label for="start_date" class="block text-gray-700 font-medium mb-2">Start Date *</label>
+                                <input type="date" id="start_date" name="start_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="end_date" class="block text-gray-700 font-medium mb-2">End Date *</label>
+                                <input type="date" id="end_date" name="end_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="days" class="block text-gray-700 font-medium mb-2">Number of Days *</label>
+                            <input type="number" id="days" name="days" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" min="1" required readonly>
+                        </div>
+                    
+                    {% elif form_type == 'gate' %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-2">Date *</label>
+                                <input type="date" name="date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="out_time" class="block text-gray-700 font-medium mb-2">Out Time *</label>
+                                <input type="time" id="out_time" name="out_time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="duration" class="block text-gray-700 font-medium mb-2">Duration (hours) *</label>
+                            <input type="number" id="duration" name="duration" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" min="1" required>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" onclick="window.history.back()" class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700">
+                            Submit Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[type="date"]')?.setAttribute('min', today);
+            
+            if (document.getElementById('start_time') && document.getElementById('end_time')) {
+                const startTime = document.getElementById('start_time');
+                const endTime = document.getElementById('end_time');
+                const duration = document.getElementById('duration');
+                
+                function calculateDuration() {
+                    if (startTime.value && endTime.value) {
+                        const start = new Date(`2000-01-01T${startTime.value}`);
+                        const end = new Date(`2000-01-01T${endTime.value}`);
+                        const diff = (end - start) / (1000 * 60 * 60);
+                        duration.value = diff > 0 ? Math.max(0.5, diff.toFixed(1)) : 0.5;
+                    }
+                }
+                
+                startTime.addEventListener('change', calculateDuration);
+                endTime.addEventListener('change', calculateDuration);
+            }
+            
+            if (document.getElementById('start_date') && document.getElementById('end_date')) {
+                const startDate = document.getElementById('start_date');
+                const endDate = document.getElementById('end_date');
+                const days = document.getElementById('days');
+                
+                function calculateDays() {
+                    if (startDate.value && endDate.value) {
+                        const start = new Date(startDate.value);
+                        const end = new Date(endDate.value);
+                        const diff = (end - start) / (1000 * 60 * 60 * 24);
+                        days.value = diff > 0 ? Math.ceil(diff) + 1 : 1;
+                    }
+                }
+                
+                startDate.addEventListener('change', calculateDays);
+                endDate.addEventListener('change', calculateDays);
+            }
+        });
+    </script>
+</body>
+</html>

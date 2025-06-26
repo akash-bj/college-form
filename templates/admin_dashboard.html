@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Digital Forms System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gradient-to-b from-blue-600 to-purple-700 text-white p-4">
+            <div class="p-4 border-b border-blue-500 mb-6">
+                <h2 class="text-xl font-bold">Digital Forms</h2>
+                <p class="text-sm text-blue-200">Admin Portal</p>
+            </div>
+            
+            <div class="flex items-center gap-3 mb-6 p-2">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center font-bold text-blue-600">
+                    {{ session.name[0] }}
+                </div>
+                <div>
+                    <h4 class="font-semibold">Admin {{ session.name.split(' ')[0] }}</h4>
+                    <p class="text-xs text-blue-200">{{ session.email }}</p>
+                </div>
+            </div>
+            
+            <ul class="space-y-1">
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class="flex items-center p-2 bg-blue-500 rounded-lg">
+                        <span class="material-icons mr-3">dashboard</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('approved_forms') }}" class="flex items-center p-2 hover:bg-blue-500 rounded-lg">
+                        <span class="material-icons mr-3">assignment_turned_in</span>
+                        <span>Approved Forms</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('logout') }}" class="flex items-center p-2 hover:bg-blue-500 rounded-lg">
+                        <span class="material-icons mr-3">logout</span>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
+                        <p class="text-gray-600">Manage users and system settings</p>
+                    </div>
+                </div>
+                
+                <!-- Search and Filter -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6">
+                    <form action="{{ url_for('admin_search_users') }}" method="GET" class="flex gap-3">
+                        <input type="text" name="q" placeholder="Search by name or email" 
+                               class="flex-1 p-2 border border-gray-300 rounded-lg">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                            <span class="material-icons mr-1">search</span> Search
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="mb-6">
+                    <div class="flex border-b">
+                        <button class="tab-btn active" data-tab="all">All Users</button>
+                        <button class="tab-btn" data-tab="students">Students</button>
+                        <button class="tab-btn" data-tab="faculty">Faculty</button>
+                        <button class="tab-btn" data-tab="hod">HODs</button>
+                    </div>
+                </div>
+                
+                <!-- Users Table -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-3 px-4 text-left">Name</th>
+                                <th class="py-3 px-4 text-left">Email</th>
+                                <th class="py-3 px-4 text-left">Role</th>
+                                <th class="py-3 px-4 text-left">Department</th>
+                                <th class="py-3 px-4 text-left">Details</th>
+                                <th class="py-3 px-4 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for user in users %}
+                            <tr>
+                                <td class="py-3 px-4">{{ user.name }}</td>
+                                <td class="py-3 px-4">{{ user.email }}</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-1 rounded-full text-xs 
+                                        {% if user.role == 'student' %}bg-blue-100 text-blue-800
+                                        {% elif user.role == 'faculty' %}bg-yellow-100 text-yellow-800
+                                        {% elif user.role == 'hod' %}bg-green-100 text-green-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ user.role|upper }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4">{{ user.department }}</td>
+                                <td class="py-3 px-4">
+                                    {% if user.role == 'student' %}
+                                        Year {{ user.year }}, Sec {{ user.section }}
+                                    {% elif user.role == 'faculty' %}
+                                        Sections: {{ user.sections|join(', ') }}
+                                        {% if user.coordinator_section %}
+                                            <br>Coordinator: {{ user.coordinator_section }}
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-4">
+                                    <a href="{{ url_for('admin_edit_user', email=user.email) }}" 
+                                       class="text-blue-600 hover:text-blue-800 flex items-center">
+                                        <span class="material-icons text-sm mr-1">edit</span> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="py-4 px-4 text-center text-gray-500">No users found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // In a real app, you would filter the table here
+                // For simplicity, we're just changing the active tab
+            });
+        });
+    </script>
+</body>
+</html>
