@@ -45,6 +45,7 @@
             width: 100%;
         }
 
+        /* Sidebar Styles */
         .sidebar {
             width: var(--sidebar-width);
             background: linear-gradient(180deg, var(--primary), var(--secondary));
@@ -138,6 +139,7 @@
             font-size: 1.25rem;
         }
 
+        /* Main Content Styles */
         .main-content {
             flex: 1;
             padding: 2rem;
@@ -174,6 +176,7 @@
             cursor: pointer;
         }
 
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -212,16 +215,6 @@
             color: var(--primary);
         }
 
-        .stat-icon.success {
-            background-color: rgba(6, 214, 160, 0.15);
-            color: var(--success);
-        }
-
-        .stat-icon.warning {
-            background-color: rgba(255, 209, 102, 0.15);
-            color: var(--warning);
-        }
-
         .stat-content h3 {
             margin-bottom: 0.25rem;
             font-size: 1.5rem;
@@ -233,24 +226,27 @@
             font-size: 0.875rem;
         }
 
+        /* Approval Grid */
         .approval-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 1.5rem;
         }
-        
+
         .approval-card {
             background: white;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             overflow: hidden;
             border-left: 4px solid var(--warning);
+            transition: var(--transition);
         }
-        
-        .approval-card.approved {
-            border-left-color: var(--success);
+
+        .approval-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         }
-        
+
         .approval-card-header {
             padding: 1rem;
             background-color: #f8fafc;
@@ -259,11 +255,11 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .approval-card-body {
             padding: 1rem;
         }
-        
+
         .approval-card-footer {
             padding: 1rem;
             border-top: 1px solid var(--light-gray);
@@ -271,14 +267,14 @@
             justify-content: flex-end;
             gap: 0.5rem;
         }
-        
+
         .student-info {
             display: flex;
             align-items: center;
             gap: 1rem;
             margin-bottom: 1rem;
         }
-        
+
         .student-avatar {
             width: 40px;
             height: 40px;
@@ -290,6 +286,7 @@
             font-weight: bold;
         }
 
+        /* Status Badges */
         .status {
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -308,6 +305,17 @@
             color: #047857;
         }
 
+        .status-rejected {
+            background-color: rgba(239, 71, 111, 0.15);
+            color: #b91c1c;
+        }
+
+        .status-pending_hod {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #ff8f00;
+        }
+
+        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -346,12 +354,77 @@
             background-color: #05b98c;
         }
 
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc3545;
+        }
+
+        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 3rem;
             color: var(--gray);
         }
 
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        .empty-state h3 {
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Section Badge */
+        .section-badge {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        /* Form Details */
+        .form-detail {
+            margin-bottom: 0.5rem;
+        }
+        .form-detail-label {
+            font-weight: 500;
+            color: var(--gray);
+        }
+
+        /* Approval Progress */
+        .approval-progress {
+            margin: 1rem 0;
+        }
+        .progress-bar {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        /* Responsive Styles */
         @media (max-width: 992px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -376,18 +449,6 @@
                 grid-template-columns: 1fr;
             }
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animated {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
     </style>
 </head>
 <body>
@@ -454,6 +515,15 @@
                         <p>Pending Approvals</p>
                     </div>
                 </div>
+                <div class="stat-card animated delay-1">
+                    <div class="stat-icon primary">
+                        <span class="material-icons">schedule</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ approved_count }}</h3>
+                        <p>Forms Approved</p>
+                    </div>
+                </div>
             </div>
             
             <div class="card">
@@ -467,9 +537,20 @@
                         <div class="approval-card">
                             <div class="approval-card-header">
                                 <h4>{{ form.form_type|upper }} Form</h4>
-                                <span class="status status-pending">Pending</span>
+                                <span class="status status-pending">
+                                    Pending ({{ form.approved_by|length }}/{{ form.approver_emails|length }})
+                                </span>
                             </div>
                             <div class="approval-card-body">
+                                <div class="approval-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: {{ (form.approved_by|length / form.approver_emails|length) * 100 }}%"></div>
+                                    </div>
+                                    <div class="progress-text">
+                                        {{ form.approved_by|length }} of {{ form.approver_emails|length }} approvals complete
+                                    </div>
+                                </div>
+                                
                                 <div class="student-info">
                                     <div class="student-avatar">
                                         {{ form.student_name[0] }}
@@ -477,16 +558,72 @@
                                     <div>
                                         <h5>{{ form.student_name }}</h5>
                                         <p>{{ form.student_email }}</p>
-                                        <p>Section: {{ form.student_section }}</p>
+                                        <span class="section-badge">Section: {{ form.student_section }}</span>
                                     </div>
                                 </div>
-                                <p><strong>Reason:</strong> {{ form.reason }}</p>
-                                <p><strong>Date:</strong> {{ form.date }}</p>
-                                <p><strong>Submitted:</strong> {{ form.timestamp.strftime('%d %b %Y, %I:%M %p') }}</p>
+                                
+                                <div class="form-detail">
+                                    <span class="form-detail-label">Reason:</span>
+                                    <p>{{ form.reason }}</p>
+                                </div>
+                                
+                                {% if form.form_type == 'od' %}
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Date:</span>
+                                        <p>{{ form.date }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Time:</span>
+                                        <p>{{ form.start_time }} to {{ form.end_time }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Duration:</span>
+                                        <p>{{ form.duration }} hours</p>
+                                    </div>
+                                {% elif form.form_type == 'leave' %}
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">From:</span>
+                                        <p>{{ form.start_date }} to {{ form.end_date }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Days:</span>
+                                        <p>{{ form.days }} day(s)</p>
+                                    </div>
+                                {% elif form.form_type == 'gate' %}
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Date:</span>
+                                        <p>{{ form.date }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Out Time:</span>
+                                        <p>{{ form.out_time }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Duration:</span>
+                                        <p>{{ form.duration }} hours</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="form-detail">
+                                    <span class="form-detail-label">Submitted:</span>
+                                    <p>{{ form.timestamp.strftime('%d %b %Y, %I:%M %p') }}</p>
+                                </div>
+                                
+                                {% if form.approved_by %}
+                                <div class="form-detail">
+                                    <span class="form-detail-label">Approved By:</span>
+                                    <p>{{ form.approved_by|join(', ') }}</p>
+                                </div>
+                                {% endif %}
                             </div>
                             <div class="approval-card-footer">
-                                <a href="{{ url_for('approve', form_id=form.id) }}" class="btn btn-success btn-sm">Approve</a>
-                                <button class="btn btn-primary btn-sm">View Details</button>
+                                <a href="{{ url_for('approve', form_id=form.id) }}" class="btn btn-success btn-sm">
+                                    <span class="material-icons mr-1">check</span> Approve
+                                </a>
+                                <a href="{{ url_for('reject', form_id=form.id) }}" class="btn btn-danger btn-sm" 
+                                   onclick="return confirm('Are you sure you want to reject this form?')">
+                                    <span class="material-icons mr-1">close</span> Reject
+                                </a>
                             </div>
                         </div>
                         {% endfor %}
@@ -506,6 +643,7 @@
     </div>
 
     <script>
+        // Toggle sidebar on mobile
         document.querySelector('.menu-toggle').addEventListener('click', function() {
             document.querySelector('.sidebar').classList.toggle('active');
         });

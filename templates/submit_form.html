@@ -6,6 +6,31 @@
     <title>Submit Form | Digital Forms System</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .faculty-card {
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+        }
+        .faculty-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .faculty-card.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .faculty-checkbox {
+            position: absolute;
+            opacity: 0;
+            height: 0;
+            width: 0;
+        }
+        .required-field::after {
+            content: " *";
+            color: #ef4444;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8 max-w-3xl">
@@ -47,95 +72,105 @@
 
                 <form method="POST" id="formSubmission">
                     <div class="mb-6">
-                        <label for="reason" class="block text-gray-700 font-medium mb-2">Reason *</label>
+                        <label for="reason" class="block text-gray-700 font-medium mb-2 required-field">Reason</label>
                         <textarea id="reason" name="reason" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
                                   placeholder="Explain the reason for your request" required></textarea>
                     </div>
                     
-                    {% if form_type == 'od' %}
+                    {% if form_type in ['od', 'gate'] %}
+                        {% set section_str = session.year ~ session.section %}
                         <div class="bg-blue-50 p-4 rounded-lg mb-6">
                             <p class="font-medium flex items-center">
                                 <span class="material-icons mr-2">info</span>
-                                You can only select faculty from your section: {{ session.section }}
+                                You can only select faculty from your section: {{ section_str }}
                             </p>
                         </div>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div>
-                                <label class="block text-gray-700 font-medium mb-2">Date *</label>
-                                <input type="date" name="date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="start_time" class="block text-gray-700 font-medium mb-2">Start Time</label>
-                                    <input type="time" id="start_time" name="start_time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                                </div>
-                                <div>
-                                    <label for="end_time" class="block text-gray-700 font-medium mb-2">End Time</label>
-                                    <input type="time" id="end_time" name="end_time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <div class="mb-6">
-                            <label for="duration" class="block text-gray-700 font-medium mb-2">Duration (hours) *</label>
-                            <input type="number" id="duration" name="duration" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" min="0.5" step="0.5" required readonly>
-                        </div>
-                        
-                        <div class="mb-6">
-                            <label class="block text-gray-700 font-medium mb-2">Select Faculty for Approval *</label>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label class="block text-gray-700 font-medium mb-2 required-field">Select Faculty for Approval</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="facultyContainer">
                                 {% if faculty %}
                                     {% for fac in faculty %}
-                                    <div class="flex items-start">
-                                        <input type="checkbox" id="faculty_{{ loop.index }}" name="faculty" value="{{ fac.email }}" class="mt-1 mr-2">
-                                        <label for="faculty_{{ loop.index }}" class="flex-1">
-                                            <span class="font-medium">{{ fac.name }}</span>
-                                            {% if fac.coordinator_section == session.section %}
-                                                <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">COORDINATOR</span>
-                                            {% endif %}
-                                            <p class="text-sm text-gray-600">{{ fac.email }}</p>
-                                        </label>
-                                    </div>
+                                    <label class="faculty-card bg-white p-4 rounded-lg relative" for="faculty_{{ loop.index }}">
+                                        <input type="checkbox" id="faculty_{{ loop.index }}" 
+                                               name="faculty" value="{{ fac.email }}" 
+                                               class="faculty-checkbox">
+                                        <div class="flex items-center">
+                                            <div class="mr-3 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600">
+                                                {{ fac.name[0] }}
+                                            </div>
+                                            <div>
+                                                <span class="font-medium">{{ fac.name }}</span>
+                                                {% if fac.coordinator_section == section_str %}
+                                                    <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">COORDINATOR</span>
+                                                {% endif %}
+                                                <p class="text-sm text-gray-600">{{ fac.email }}</p>
+                                            </div>
+                                        </div>
+                                    </label>
                                     {% endfor %}
                                 {% else %}
                                     <p class="text-gray-600">No faculty available in your section</p>
                                 {% endif %}
                             </div>
                         </div>
+                    {% endif %}
+                    
+                    {% if form_type == 'od' %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-2 required-field">Date</label>
+                                <input type="date" name="date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="start_time" class="block text-gray-700 font-medium mb-2 required-field">Start Time</label>
+                                    <input type="time" id="start_time" name="start_time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                <div>
+                                    <label for="end_time" class="block text-gray-700 font-medium mb-2 required-field">End Time</label>
+                                    <input type="time" id="end_time" name="end_time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="duration" class="block text-gray-700 font-medium mb-2 required-field">Duration (hours)</label>
+                            <input type="number" id="duration" name="duration" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" min="0.5" step="0.5" required readonly>
+                        </div>
                     
                     {% elif form_type == 'leave' %}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
-                                <label for="start_date" class="block text-gray-700 font-medium mb-2">Start Date *</label>
+                                <label for="start_date" class="block text-gray-700 font-medium mb-2 required-field">Start Date</label>
                                 <input type="date" id="start_date" name="start_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                             </div>
                             <div>
-                                <label for="end_date" class="block text-gray-700 font-medium mb-2">End Date *</label>
+                                <label for="end_date" class="block text-gray-700 font-medium mb-2 required-field">End Date</label>
                                 <input type="date" id="end_date" name="end_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                             </div>
                         </div>
                         
                         <div class="mb-6">
-                            <label for="days" class="block text-gray-700 font-medium mb-2">Number of Days *</label>
+                            <label for="days" class="block text-gray-700 font-medium mb-2 required-field">Number of Days</label>
                             <input type="number" id="days" name="days" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" min="1" required readonly>
                         </div>
                     
                     {% elif form_type == 'gate' %}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
-                                <label class="block text-gray-700 font-medium mb-2">Date *</label>
+                                <label class="block text-gray-700 font-medium mb-2 required-field">Date</label>
                                 <input type="date" name="date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                             </div>
                             <div>
-                                <label for="out_time" class="block text-gray-700 font-medium mb-2">Out Time *</label>
+                                <label for="out_time" class="block text-gray-700 font-medium mb-2 required-field">Out Time</label>
                                 <input type="time" id="out_time" name="out_time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                             </div>
                         </div>
                         
                         <div class="mb-6">
-                            <label for="duration" class="block text-gray-700 font-medium mb-2">Duration (hours) *</label>
+                            <label for="duration" class="block text-gray-700 font-medium mb-2 required-field">Duration (hours)</label>
                             <input type="number" id="duration" name="duration" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" min="1" required>
                         </div>
                     {% endif %}
@@ -158,6 +193,19 @@
             const today = new Date().toISOString().split('T')[0];
             document.querySelector('input[type="date"]')?.setAttribute('min', today);
             
+            // Faculty selection functionality
+            document.querySelectorAll('.faculty-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const card = this.closest('.faculty-card');
+                    if (this.checked) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                });
+            });
+
+            // Time duration calculation for OD form
             if (document.getElementById('start_time') && document.getElementById('end_time')) {
                 const startTime = document.getElementById('start_time');
                 const endTime = document.getElementById('end_time');
@@ -176,6 +224,7 @@
                 endTime.addEventListener('change', calculateDuration);
             }
             
+            // Days calculation for Leave form
             if (document.getElementById('start_date') && document.getElementById('end_date')) {
                 const startDate = document.getElementById('start_date');
                 const endDate = document.getElementById('end_date');

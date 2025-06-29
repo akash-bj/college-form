@@ -212,6 +212,12 @@
             box-shadow: var(--shadow);
             overflow: hidden;
             border-left: 4px solid var(--warning);
+            transition: var(--transition);
+        }
+
+        .approval-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
         .approval-card-header {
@@ -253,6 +259,7 @@
             font-weight: bold;
         }
 
+        /* Status Badges */
         .status {
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -264,6 +271,11 @@
         .status-pending {
             background-color: rgba(255, 209, 102, 0.15);
             color: #b45309;
+        }
+
+        .status-pending_hod {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #ff8f00;
         }
 
         .btn {
@@ -298,6 +310,19 @@
         .btn-success {
             background-color: var(--success);
             color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #05b98c;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc3545;
         }
 
         .empty-state {
@@ -339,6 +364,28 @@
             font-size: 0.8rem;
             font-weight: 500;
             display: inline-block;
+            margin-top: 4px;
+        }
+
+        /* Approval Progress */
+        .approval-progress {
+            margin: 1rem 0;
+        }
+        .progress-bar {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            font-size: 0.75rem;
+            color: var(--gray);
             margin-top: 4px;
         }
     </style>
@@ -415,9 +462,18 @@
                         <div class="approval-card">
                             <div class="approval-card-header">
                                 <h4>{{ form.form_type|upper }} Form</h4>
-                                <span class="status status-pending">Pending HOD</span>
+                                <span class="status status-pending_hod">Pending HOD</span>
                             </div>
                             <div class="approval-card-body">
+                                <div class="approval-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%"></div>
+                                    </div>
+                                    <div class="progress-text">
+                                        All faculty approvals complete
+                                    </div>
+                                </div>
+                                
                                 <div class="student-info">
                                     <div class="student-avatar">
                                         {{ form.student_name[0] }}
@@ -428,13 +484,58 @@
                                         <span class="section-badge">Section: {{ form.student_section }}</span>
                                     </div>
                                 </div>
-                                <p><strong>Reason:</strong> {{ form.reason }}</p>
-                                <p><strong>Date:</strong> {{ form.date }}</p>
-                                <p><strong>Faculty Approved:</strong> {{ form.approved_by|length }}/{{ form.approver_emails|length }}</p>
+                                
+                                <div class="form-detail">
+                                    <span class="form-detail-label">Reason:</span>
+                                    <p>{{ form.reason }}</p>
+                                </div>
+                                
+                                {% if form.form_type == 'od' %}
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Date:</span>
+                                        <p>{{ form.date }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Time:</span>
+                                        <p>{{ form.start_time }} to {{ form.end_time }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Duration:</span>
+                                        <p>{{ form.duration }} hours</p>
+                                    </div>
+                                {% elif form.form_type == 'gate' %}
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Date:</span>
+                                        <p>{{ form.date }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Out Time:</span>
+                                        <p>{{ form.out_time }}</p>
+                                    </div>
+                                    <div class="form-detail">
+                                        <span class="form-detail-label">Duration:</span>
+                                        <p>{{ form.duration }} hours</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="form-detail">
+                                    <span class="form-detail-label">Submitted:</span>
+                                    <p>{{ form.timestamp.strftime('%d %b %Y, %I:%M %p') }}</p>
+                                </div>
+                                
+                                <div class="form-detail">
+                                    <span class="form-detail-label">Approved By:</span>
+                                    <p>{{ form.approved_by|join(', ') }}</p>
+                                </div>
                             </div>
                             <div class="approval-card-footer">
-                                <a href="{{ url_for('hod_approve', form_id=form.id) }}" class="btn btn-success btn-sm">Approve</a>
-                                <button class="btn btn-primary btn-sm">View Details</button>
+                                <a href="{{ url_for('hod_approve', form_id=form.id) }}" class="btn btn-success btn-sm">
+                                    <span class="material-icons mr-1">check</span> Approve
+                                </a>
+                                <a href="{{ url_for('hod_reject', form_id=form.id) }}" class="btn btn-danger btn-sm" 
+                                   onclick="return confirm('Are you sure you want to reject this form?')">
+                                    <span class="material-icons mr-1">close</span> Reject
+                                </a>
                             </div>
                         </div>
                         {% endfor %}
@@ -454,6 +555,7 @@
     </div>
 
     <script>
+        // Toggle sidebar on mobile
         document.querySelector('.menu-toggle').addEventListener('click', function() {
             document.querySelector('.sidebar').classList.toggle('active');
         });
