@@ -69,13 +69,11 @@ def login():
             if user.exists:
                 user_data = user.to_dict()
                 if user_data['password'] == password:
-                    # Set all required session variables
                     session['email'] = email
                     session['name'] = user_data['name']
                     session['role'] = user_data['role']
                     session['department'] = user_data.get('department', '')
                     
-                    # Set section/year based on role
                     if user_data['role'] == 'student':
                         session['section'] = user_data['section']
                         session['year'] = user_data['year']
@@ -156,15 +154,30 @@ def student_dashboard():
 @role_required(['faculty'])
 def faculty_dashboard():
     forms = []
+    approved_count = 0
+    
     if 'sections' in session:
+        # Get pending forms
         for section in session['sections']:
-            section_forms = db.collection('forms').where('student_section', '==', section).where('status', '==', 'pending').stream()
+            section_forms = db.collection('forms')\
+                .where('student_section', '==', section)\
+                .where('status', '==', 'pending')\
+                .stream()
+                
             for form in section_forms:
                 form_data = form.to_dict()
-                form_data['id'] = form.id
-                forms.append(form_data)
+                if session['email'] in form_data.get('approver_emails', []):
+                    form_data['id'] = form.id
+                    forms.append(form_data)
+        
+        # Get approved count
+        approved_forms = db.collection('forms')\
+            .where('student_section', 'in', session['sections'])\
+            .where('status', '==', 'approved')\
+            .stream()
+        approved_count = sum(1 for _ in approved_forms)
     
-    return render_template('faculty_dashboard.html', forms=forms)
+    return render_template('faculty_dashboard.html', forms=forms, approved_count=approved_count)
 
 @app.route('/hod/dashboard')
 @login_required
@@ -172,7 +185,12 @@ def faculty_dashboard():
 def hod_dashboard():
     forms = []
     if 'department' in session:
-        forms_ref = db.collection('forms').where('student_department', '==', session['department']).where('status', '==', 'pending_hod').stream()
+        forms_ref = db.collection('forms')\
+            .where('student_department', '==', session['department'])\
+            .where('status', '==', 'pending_hod')\
+            .where('hod_status', '==', 'pending')\
+            .stream()
+        
         for form in forms_ref:
             form_data = form.to_dict()
             form_data['id'] = form.id
@@ -198,11 +216,13 @@ def admin_dashboard():
 @role_required(['student'])
 def submit_form(form_type):
     if request.method == 'POST':
+        section_str = f"{session['year']}{session['section']}"
+        
         form_data = {
             'form_type': form_type,
             'student_name': session['name'],
             'student_email': session['email'],
-            'student_section': session.get('section', ''),
+            'student_section': section_str,
             'student_department': session.get('department', ''),
             'student_year': session.get('year', ''),
             'reason': request.form['reason'],
@@ -212,16 +232,38 @@ def submit_form(form_type):
             'approved_by': [],
             'approver_emails': []
         }
-        
+
+        if form_type in ['od', 'gate']:
+            faculty_emails = request.form.getlist('faculty')
+            if not faculty_emails:
+                flash('Please select at least one faculty for approval', 'error')
+                return redirect(url_for('submit_form', form_type=form_type))
+            
+            form_data['approver_emails'] = faculty_emails
+            form_data['hod_status'] = 'pending'
+
         if form_type == 'od':
             form_data.update({
                 'date': request.form['date'],
                 'start_time': request.form['start_time'],
                 'end_time': request.form['end_time'],
-                'duration': request.form['duration'],
-                'approver_emails': request.form.getlist('faculty')
+                'duration': request.form['duration']
             })
         elif form_type == 'leave':
+            coordinator_ref = db.collection('users')\
+                .where('role', '==', 'faculty')\
+                .where('department', '==', session['department'])\
+                .where('coordinator_section', '==', section_str)\
+                .limit(1).stream()
+            
+            coordinator = next(coordinator_ref, None)
+            if coordinator:
+                coordinator_data = coordinator.to_dict()
+                form_data['approver_emails'] = [coordinator_data['email']]
+            else:
+                flash('No coordinator found for your section', 'error')
+                return redirect(url_for('submit_form', form_type=form_type))
+            
             form_data.update({
                 'start_date': request.form['start_date'],
                 'end_date': request.form['end_date'],
@@ -238,13 +280,15 @@ def submit_form(form_type):
         flash('Form submitted successfully!', 'success')
         return redirect(url_for('dashboard'))
     
-    # Get faculty for the student's department and section
     faculty = []
-    if 'department' in session and 'section' in session:
-        faculty_ref = db.collection('users').where('role', '==', 'faculty')\
-                      .where('department', '==', session['department'])\
-                      .where('sections', 'array_contains', session['section'])\
-                      .stream()
+    if form_type in ['od', 'gate'] and 'department' in session:
+        section_str = f"{session['year']}{session['section']}"
+        faculty_ref = db.collection('users')\
+            .where('role', '==', 'faculty')\
+            .where('department', '==', session['department'])\
+            .where('sections', 'array_contains', section_str)\
+            .stream()
+        
         for fac in faculty_ref:
             faculty_data = fac.to_dict()
             faculty_data['id'] = fac.id
@@ -259,23 +303,56 @@ def approve(form_id):
     form_ref = db.collection('forms').document(form_id)
     form = form_ref.get().to_dict()
     
-    if session['email'] in form['approver_emails'] and session['email'] not in form.get('approved_by', []):
-        approved_by = form.get('approved_by', [])
-        approved_by.append(session['name'])
+    if session['email'] in form['approver_emails']:
+        # Get unique approved_by list (no duplicates)
+        approved_by = list(set(form.get('approved_by', [])))
         
-        form_ref.update({
-            'approved_by': approved_by
-        })
-        
-        if len(approved_by) == len(form['approver_emails']):
+        # Check if faculty hasn't already approved
+        if session['name'] not in approved_by:
+            approved_by.append(session['name'])
+            
             form_ref.update({
-                'status': 'approved',
-                'approved_at': firestore.SERVER_TIMESTAMP
+                'approved_by': approved_by
             })
-        
-        flash('Form approved successfully!', 'success')
+            
+            # Check if all approvers have approved (using set to get unique count)
+            if len(approved_by) == len(set(form['approver_emails'])):
+                if form['form_type'] in ['od', 'gate']:
+                    form_ref.update({
+                        'status': 'pending_hod',
+                        'hod_status': 'pending'
+                    })
+                elif form['form_type'] == 'leave':
+                    form_ref.update({
+                        'status': 'approved',
+                        'approved_at': firestore.SERVER_TIMESTAMP
+                    })
+            
+            flash('Form approved successfully!', 'success')
+        else:
+            flash('You have already approved this form', 'warning')
     else:
-        flash('You have already approved this form or are not authorized', 'warning')
+        flash('You are not authorized to approve this form', 'error')
+    
+    return redirect(url_for('faculty_dashboard'))
+
+@app.route('/reject/<form_id>')
+@login_required
+@role_required(['faculty'])
+def reject(form_id):
+    form_ref = db.collection('forms').document(form_id)
+    form = form_ref.get().to_dict()
+    
+    if session['email'] in form['approver_emails']:
+        form_ref.update({
+            'status': 'rejected',
+            'rejected_by': session['name'],
+            'rejected_at': firestore.SERVER_TIMESTAMP,
+            'rejection_reason': request.args.get('reason', 'No reason provided')
+        })
+        flash('Form has been rejected', 'warning')
+    else:
+        flash('You are not authorized to reject this form', 'error')
     
     return redirect(url_for('faculty_dashboard'))
 
@@ -292,19 +369,45 @@ def hod_approve(form_id):
     flash('Form approved by HOD!', 'success')
     return redirect(url_for('hod_dashboard'))
 
+@app.route('/hod_reject/<form_id>')
+@login_required
+@role_required(['hod'])
+def hod_reject(form_id):
+    form_ref = db.collection('forms').document(form_id)
+    form_ref.update({
+        'status': 'rejected',
+        'hod_status': 'rejected',
+        'rejected_by': session['name'],
+        'rejected_at': firestore.SERVER_TIMESTAMP,
+        'rejection_reason': request.args.get('reason', 'No reason provided')
+    })
+    flash('Form has been rejected', 'warning')
+    return redirect(url_for('hod_dashboard'))
+
 @app.route('/approved_forms')
 @login_required
 def approved_forms():
     forms = []
     
     if session['role'] == 'student':
-        forms_ref = db.collection('forms').where('student_email', '==', session['email']).where('status', '==', 'approved').stream()
+        forms_ref = db.collection('forms')\
+            .where('student_email', '==', session['email'])\
+            .where('status', '==', 'approved')\
+            .stream()
     elif session['role'] == 'faculty':
-        forms_ref = db.collection('forms').where('student_section', 'in', session.get('sections', [])).where('status', '==', 'approved').stream()
+        forms_ref = db.collection('forms')\
+            .where('student_section', 'in', session.get('sections', []))\
+            .where('status', '==', 'approved')\
+            .stream()
     elif session['role'] == 'hod':
-        forms_ref = db.collection('forms').where('student_department', '==', session.get('department', '')).where('status', '==', 'approved').stream()
+        forms_ref = db.collection('forms')\
+            .where('student_department', '==', session.get('department', ''))\
+            .where('status', '==', 'approved')\
+            .stream()
     else:
-        forms_ref = db.collection('forms').where('status', '==', 'approved').stream()
+        forms_ref = db.collection('forms')\
+            .where('status', '==', 'approved')\
+            .stream()
     
     for form in forms_ref:
         form_data = form.to_dict()
