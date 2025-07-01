@@ -129,21 +129,22 @@
                                     <input type="time" id="start_time" name="start_time" 
                                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
                                            min="09:00" max="16:00" step="300" required>
-                                    <p class="text-sm text-gray-500 mt-1">College hours: 9:00 - 16:00</p>
+                                    <p class="text-sm text-gray-500 mt-1">College hours: 9:00 AM - 04:00 PM</p>
                                 </div>
                                 <div>
                                     <label for="end_time" class="block text-gray-700 font-medium mb-2 required-field">End Time</label>
                                     <input type="time" id="end_time" name="end_time" 
                                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
                                            min="09:00" max="16:00" step="300" required>
-                                    <p class="text-sm text-gray-500 mt-1">College hours: 9:00 - 16:00</p>
+                                    <p class="text-sm text-gray-500 mt-1">College hours: 9:00 AM - 04:00 PM</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="mb-6">
                             <label for="duration" class="block text-gray-700 font-medium mb-2 required-field">Duration</label>
-                            <input type="text" id="duration" name="duration" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" readonly>
+                            <input type="text" id="duration" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" readonly>
+                            <input type="hidden" id="duration_hidden" name="duration">
                         </div>
                     
                     {% elif form_type == 'leave' %}
@@ -174,7 +175,7 @@
                                 <input type="time" id="out_time" name="out_time" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
                                        min="09:00" max="16:00" step="300" required>
-                                <p class="text-sm text-gray-500 mt-1">College hours: 9:00 - 16:00</p>
+                                <p class="text-sm text-gray-500 mt-1">College hours: 9:00 - 04:00</p>
                             </div>
                         </div>
                         
@@ -197,75 +198,6 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
-            document.querySelector('input[type="date"]')?.setAttribute('min', today);
-            
-            // Faculty selection functionality
-            document.querySelectorAll('.faculty-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const card = this.closest('.faculty-card');
-                    if (this.checked) {
-                        card.classList.add('selected');
-                    } else {
-                        card.classList.remove('selected');
-                    }
-                });
-            });
-
-            // Time duration calculation for OD form
-            if (document.getElementById('start_time') && document.getElementById('end_time')) {
-                const startTime = document.getElementById('start_time');
-                const endTime = document.getElementById('end_time');
-                const duration = document.getElementById('duration');
-                
-                function calculateDuration() {
-                    if (startTime.value && endTime.value) {
-                        const startParts = startTime.value.split(':');
-                        const endParts = endTime.value.split(':');
-                        
-                        const startHours = parseInt(startParts[0]);
-                        const startMinutes = parseInt(startParts[1]);
-                        const endHours = parseInt(endParts[0]);
-                        const endMinutes = parseInt(endParts[1]);
-                        
-                        let totalMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
-                        
-                        if (totalMinutes < 0) {
-                            totalMinutes += 24 * 60; // Handle overnight (though shouldn't happen with our time range)
-                        }
-                        
-                        const hours = Math.floor(totalMinutes / 60);
-                        const minutes = totalMinutes % 60;
-                        
-                        duration.value = `${hours} hours ${minutes} minutes`;
-                    }
-                }
-                
-                startTime.addEventListener('change', calculateDuration);
-                endTime.addEventListener('change', calculateDuration);
-            }
-            
-            // Days calculation for Leave form
-            if (document.getElementById('start_date') && document.getElementById('end_date')) {
-                const startDate = document.getElementById('start_date');
-                const endDate = document.getElementById('end_date');
-                const days = document.getElementById('days');
-                
-                function calculateDays() {
-                    if (startDate.value && endDate.value) {
-                        const start = new Date(startDate.value);
-                        const end = new Date(endDate.value);
-                        const diff = Math.floor((end - start) / (1000 * 60 * 60 * 24));
-                        days.value = diff > 0 ? diff + 1 : 1;
-                    }
-                }
-                
-                startDate.addEventListener('change', calculateDays);
-                endDate.addEventListener('change', calculateDays);
-            }
-        });
-    </script>
+    <script src="/static/js/form_submission.js"></script>
 </body>
 </html>
