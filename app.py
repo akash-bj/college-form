@@ -56,6 +56,11 @@ def role_required(roles):
 def home():
     return redirect(url_for('login'))
 
+@app.route('/loading')
+def loading():
+    """Show loading screen before redirecting to dashboard"""
+    return render_template('loading.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -80,7 +85,8 @@ def login():
                     elif user_data['role'] == 'faculty':
                         session['sections'] = user_data.get('sections', [])
                     
-                    return redirect(url_for('dashboard'))
+                    # Redirect to loading screen first
+                    return redirect(url_for('loading'))
                 else:
                     error = 'Invalid password'
             else:
@@ -120,7 +126,8 @@ def register():
             
             user_ref.set(user_data)
             flash('Registration successful! Please login.', 'success')
-            return redirect(url_for('login'))
+            # Redirect to loading screen after registration
+            return redirect(url_for('loading'))
         
         except Exception as e:
             error = f'Error: {str(e)}'
@@ -131,6 +138,7 @@ def register():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # This route is called automatically by the loading screen
     role = session['role']
     if role == 'student':
         return redirect(url_for('student_dashboard'))
@@ -142,6 +150,7 @@ def dashboard():
         return redirect(url_for('admin_dashboard'))
     else:
         return redirect(url_for('logout'))
+
 
 @app.route('/student/dashboard')
 @login_required
@@ -211,6 +220,8 @@ def admin_dashboard():
     
     return render_template('admin_dashboard.html', users=users)
 
+
+
 @app.route('/submit_form/<form_type>', methods=['GET', 'POST'])
 @login_required
 @role_required(['student'])
@@ -251,9 +262,9 @@ def submit_form(form_type):
                 start_dt = datetime.strptime(start_time, '%H:%M').time()
                 end_dt = datetime.strptime(end_time, '%H:%M').time()
                 
-                # Validate college hours (9:00 to 16:00)
-                if start_dt < time(9, 0) or end_dt > time(16, 0):
-                    flash('Time must be between 9:00 and 16:00', 'error')
+                # Validate college hours (9:00 to 16:30)
+                if start_dt < time(9, 0) or end_dt > time(16, 30):
+                    flash('Time must be between 9:00 and 16:30', 'error')
                     return redirect(url_for('submit_form', form_type=form_type))
                     
                 if start_dt >= end_dt:
@@ -266,7 +277,7 @@ def submit_form(form_type):
                 duration_min = end_min - start_min
                 duration_hours = duration_min // 60
                 duration_minutes = duration_min % 60
-                duration_str = f"{duration_hours}:{duration_minutes:02d}"
+                duration_str = f"{duration_hours} hours {duration_minutes} minutes"
                 
                 form_data.update({
                     'date': request.form['date'],
@@ -304,9 +315,9 @@ def submit_form(form_type):
             try:
                 out_dt = datetime.strptime(out_time, '%H:%M').time()
                 
-                # Validate college hours (9:00 to 16:00)
-                if out_dt < time(9, 0) or out_dt > time(16, 0):
-                    flash('Time must be between 9:00 and 16:00', 'error')
+                # Validate college hours (9:00 to 16:30)
+                if out_dt < time(9, 0) or out_dt > time(16, 30):
+                    flash('Time must be between 9:00 and 16:30', 'error')
                     return redirect(url_for('submit_form', form_type=form_type))
                     
                 form_data.update({
@@ -337,6 +348,7 @@ def submit_form(form_type):
             faculty.append(faculty_data)
     
     return render_template('submit_form.html', form_type=form_type, faculty=faculty)
+
 
 @app.route('/approve/<form_id>')
 @login_required
