@@ -58,8 +58,10 @@ def home():
 
 @app.route('/loading')
 def loading():
-    """Show loading screen before redirecting to dashboard"""
-    return render_template('loading.html')
+    # Only show loading screen if coming from auth flow
+    if request.referrer and ('login' in request.referrer or 'register' in request.referrer):
+        return render_template('loading.html')
+    return redirect(url_for('dashboard'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
