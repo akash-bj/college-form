@@ -4,7 +4,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -243,12 +243,41 @@ def submit_form(form_type):
             form_data['hod_status'] = 'pending'
 
         if form_type == 'od':
-            form_data.update({
-                'date': request.form['date'],
-                'start_time': request.form['start_time'],
-                'end_time': request.form['end_time'],
-                'duration': request.form['duration']
-            })
+            # Validate time inputs
+            start_time = request.form['start_time']
+            end_time = request.form['end_time']
+            
+            try:
+                start_dt = datetime.strptime(start_time, '%H:%M').time()
+                end_dt = datetime.strptime(end_time, '%H:%M').time()
+                
+                # Validate college hours (9:00 to 16:00)
+                if start_dt < time(9, 0) or end_dt > time(16, 0):
+                    flash('Time must be between 9:00 and 16:00', 'error')
+                    return redirect(url_for('submit_form', form_type=form_type))
+                    
+                if start_dt >= end_dt:
+                    flash('End time must be after start time', 'error')
+                    return redirect(url_for('submit_form', form_type=form_type))
+                    
+                # Calculate duration in hours and minutes
+                start_min = start_dt.hour * 60 + start_dt.minute
+                end_min = end_dt.hour * 60 + end_dt.minute
+                duration_min = end_min - start_min
+                duration_hours = duration_min // 60
+                duration_minutes = duration_min % 60
+                duration_str = f"{duration_hours}:{duration_minutes:02d}"
+                
+                form_data.update({
+                    'date': request.form['date'],
+                    'start_time': start_time,
+                    'end_time': end_time,
+                    'duration': duration_str
+                })
+            except ValueError:
+                flash('Invalid time format', 'error')
+                return redirect(url_for('submit_form', form_type=form_type))
+                
         elif form_type == 'leave':
             coordinator_ref = db.collection('users')\
                 .where('role', '==', 'faculty')\
@@ -270,11 +299,24 @@ def submit_form(form_type):
                 'days': request.form['days']
             })
         elif form_type == 'gate':
-            form_data.update({
-                'date': request.form['date'],
-                'out_time': request.form['out_time'],
-                'duration': request.form['duration']
-            })
+            out_time = request.form['out_time']
+            
+            try:
+                out_dt = datetime.strptime(out_time, '%H:%M').time()
+                
+                # Validate college hours (9:00 to 16:00)
+                if out_dt < time(9, 0) or out_dt > time(16, 0):
+                    flash('Time must be between 9:00 and 16:00', 'error')
+                    return redirect(url_for('submit_form', form_type=form_type))
+                    
+                form_data.update({
+                    'date': request.form['date'],
+                    'out_time': out_time,
+                    'duration': request.form['duration']
+                })
+            except ValueError:
+                flash('Invalid time format', 'error')
+                return redirect(url_for('submit_form', form_type=form_type))
         
         db.collection('forms').add(form_data)
         flash('Form submitted successfully!', 'success')
@@ -304,10 +346,8 @@ def approve(form_id):
     form = form_ref.get().to_dict()
     
     if session['email'] in form['approver_emails']:
-        # Get unique approved_by list (no duplicates)
         approved_by = list(set(form.get('approved_by', [])))
         
-        # Check if faculty hasn't already approved
         if session['name'] not in approved_by:
             approved_by.append(session['name'])
             
@@ -315,7 +355,6 @@ def approve(form_id):
                 'approved_by': approved_by
             })
             
-            # Check if all approvers have approved (using set to get unique count)
             if len(approved_by) == len(set(form['approver_emails'])):
                 if form['form_type'] in ['od', 'gate']:
                     form_ref.update({
