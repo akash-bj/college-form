@@ -167,40 +167,44 @@
     </div>
 
     <script>
-        // Simulate progress
-        const progress = document.getElementById('progress');
-        const status = document.getElementById('status');
-        const messages = [
-            "Loading user data...",
-            "Preparing dashboard...",
-            "Almost there...",
-            "Ready to go!"
-        ];
+    // First check if we can skip loading entirely
+    if (performance.navigation.type === 0 &&  // Regular page load
+        performance.now() < 1000) {          // Page loaded quickly
+        window.location.href = "/dashboard";
+    } else {
+        // Only show loading animation if actually needed
+        const startTime = Date.now();
+        const minShowTime = 800; // Minimum loading screen duration (ms)
         
-        let progressValue = 0;
-        const interval = setInterval(() => {
-            progressValue += Math.random() * 10;
-            progress.style.width = `${Math.min(progressValue, 100)}%`;
+        // Real progress tracking
+        const updateProgress = (actualProgress) => {
+            const progress = document.getElementById('progress');
+            progress.style.width = `${actualProgress}%`;
             
-            // Update status message
-            if (progressValue < 30) {
-                status.textContent = messages[0];
-            } else if (progressValue < 60) {
-                status.textContent = messages[1];
-            } else if (progressValue < 90) {
-                status.textContent = messages[2];
+            // Update status messages
+            const status = document.getElementById('status');
+            if (actualProgress < 30) status.textContent = "Loading user data...";
+            else if (actualProgress < 70) status.textContent = "Preparing dashboard...";
+            else status.textContent = "Finalizing...";
+        };
+
+        // Check if page resources are loaded
+        const checkReady = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(100, (elapsed / minShowTime) * 100);
+            
+            updateProgress(progress);
+            
+            if (document.readyState === 'complete' && elapsed >= minShowTime) {
+                window.location.href = "/dashboard";
             } else {
-                status.textContent = messages[3];
+                requestAnimationFrame(checkReady);
             }
-            
-            if (progressValue >= 100) {
-                clearInterval(interval);
-                // Redirect after slight delay to show completion
-                setTimeout(() => {
-                    window.location.href = "/dashboard";
-                }, 500);
-            }
-        }, 300);
-    </script>
+        };
+
+        // Start checking
+        checkReady();
+    }
+</script>
 </body>
 </html>
