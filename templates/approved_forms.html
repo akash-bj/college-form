@@ -13,6 +13,16 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 1.5rem;
             margin-bottom: 1.5rem;
+            border-left: 4px solid;
+        }
+        .form-type-od {
+            border-left-color: #3b82f6;
+        }
+        .form-type-leave {
+            border-left-color: #10b981;
+        }
+        .form-type-gate {
+            border-left-color: #8b5cf6;
         }
         .status {
             display: inline-block;
@@ -46,6 +56,10 @@
             font-weight: 500;
             display: inline-block;
         }
+        .time-display {
+            font-weight: 500;
+            color: #1e40af;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-6">
@@ -56,103 +70,85 @@
     <h1 class="text-2xl font-bold text-gray-800 mb-6">All Approved Forms</h1>
     
     {% if forms %}
-        {% for form in forms %}
-        <div class="form-card">
-            <div class="flex justify-between items-center border-b pb-3 mb-3">
-                <div>
-                    <h3 class="text-lg font-bold">{{ form.form_type|upper }} Form</h3>
-                    <p class="text-gray-500 text-sm">#{{ form.id[:8] }}</p>
+        <div class="grid grid-cols-1 gap-6">
+            {% for form in forms %}
+            <div class="form-card form-type-{{ form.form_type }}">
+                <div class="flex flex-wrap justify-between items-center pb-3 mb-3 gap-2">
+                    <div>
+                        <h3 class="text-lg font-bold text-blue-600">
+                            {{ form.form_type|upper }} FORM
+                            <span class="text-sm font-normal text-gray-500">#{{ form.id[:8] }}</span>
+                        </h3>
+                        <div class="mt-1">
+                            <span class="status status-{{ form.status }}">{{ form.status|upper }}</span>
+                            <span class="status status-{{ form.hod_status }}">{{ form.hod_status|upper }}</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500">
+                        Submitted: {{ form.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                    </p>
                 </div>
-                <span class="status status-{{ form.status }}">{{ form.status|upper }}</span>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-gray-600 font-medium">Student:</p>
-                    <p>{{ form.student_name }} ({{ form.student_email }})</p>
-                    <div class="mt-1">
-                        <span class="section-badge">Year: {{ form.student_year }}</span>
-                        <span class="section-badge">Section: {{ form.student_section }}</span>
-                        <span class="section-badge">Dept: {{ form.student_department }}</span>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-gray-600 font-medium">Student</p>
+                        <p class="font-medium">{{ form.student_name }}</p>
+                        <p class="text-sm text-gray-600">{{ form.student_email }}</p>
+                        <div class="mt-2 flex flex-wrap gap-1">
+                            <span class="section-badge">Year {{ form.student_year }}</span>
+                            <span class="section-badge">Sec {{ form.student_section }}</span>
+                            <span class="section-badge">Dept {{ form.student_department }}</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="text-gray-600 font-medium">Details</p>
+                        {% if form.form_type == 'od' %}
+                            <p>Date: {{ form.date }}</p>
+                            <p>
+                                Time: 
+                                <span class="time-display">{{ form.start_time }}</span> 
+                                to 
+                                <span class="time-display">{{ form.end_time }}</span>
+                            </p>
+                            <p>Duration: {{ form.duration }}</p>
+                        {% elif form.form_type == 'leave' %}
+                            <p>
+                                From: {{ form.start_date }} 
+                                to {{ form.end_date }}
+                            </p>
+                            <p>Days: {{ form.days }}</p>
+                        {% elif form.form_type == 'gate' %}
+                            <p>Date: {{ form.date }}</p>
+                            <p>
+                                Out Time: 
+                                <span class="time-display">{{ form.out_time }}</span>
+                            </p>
+                            <p>Duration: {{ form.duration }} hours</p>
+                        {% endif %}
                     </div>
                 </div>
                 
-                <div>
-                    <p class="text-gray-600 font-medium">Submitted:</p>
-                    <p>{{ form.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
-                    
-                    {% if form.approved_at %}
-                    <p class="text-gray-600 font-medium mt-2">Approved At:</p>
-                    <p>{{ form.approved_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                    {% endif %}
+                <div class="mb-4">
+                    <p class="text-gray-600 font-medium">Reason</p>
+                    <p class="mt-1 p-3 bg-gray-50 rounded-lg">{{ form.reason }}</p>
                 </div>
+                
+                {% if form.approved_by %}
+                <div class="mt-4 pt-3 border-t">
+                    <p class="text-gray-600 font-medium">Approved By</p>
+                    <p>{{ form.approved_by|join(', ') }}</p>
+                </div>
+                {% endif %}
+                
+                {% if form.approved_at %}
+                <div class="mt-2 text-sm text-gray-500">
+                    Approved at: {{ form.approved_at.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+                {% endif %}
             </div>
-            
-            <div class="mb-4">
-                <p class="text-gray-600 font-medium">Reason:</p>
-                <p>{{ form.reason }}</p>
-            </div>
-            
-            {% if form.form_type == 'od' %}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                    <p class="text-gray-600 font-medium">Date:</p>
-                    <p>{{ form.date }}</p>
-                </div>
-                <div>
-                    <p class="text-gray-600 font-medium">Time:</p>
-                    <p>{{ form.start_time }} to {{ form.end_time }}</p>
-                </div>
-                <div>
-                    <p class="text-gray-600 font-medium">Duration:</p>
-                    <p>{{ form.duration }} hours</p>
-                </div>
-            </div>
-            {% elif form.form_type == 'leave' %}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                    <p class="text-gray-600 font-medium">From:</p>
-                    <p>{{ form.start_date }}</p>
-                </div>
-                <div>
-                    <p class="text-gray-600 font-medium">To:</p>
-                    <p>{{ form.end_date }}</p>
-                </div>
-                <div>
-                    <p class="text-gray-600 font-medium">Days:</p>
-                    <p>{{ form.days }}</p>
-                </div>
-            </div>
-            {% elif form.form_type == 'gate' %}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                    <p class="text-gray-600 font-medium">Date:</p>
-                    <p>{{ form.date }}</p>
-                </div>
-                <div>
-                    <p class="text-gray-600 font-medium">Out Time:</p>
-                    <p>{{ form.out_time }}</p>
-                </div>
-                <div>
-                    <p class="text-gray-600 font-medium">Duration:</p>
-                    <p>{{ form.duration }} hours</p>
-                </div>
-            </div>
-            {% endif %}
-            
-            {% if form.approved_by %}
-            <div class="mb-4">
-                <p class="text-gray-600 font-medium">Approved By:</p>
-                <p>{{ form.approved_by|join(', ') }}</p>
-            </div>
-            {% endif %}
-            
-            <div>
-                <p class="text-gray-600 font-medium">HOD Status:</p>
-                <span class="status status-{{ form.hod_status }}">{{ form.hod_status|upper }}</span>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     {% else %}
         <div class="bg-white rounded-lg shadow p-6 text-center">
             <p class="text-gray-600">No approved forms found.</p>
