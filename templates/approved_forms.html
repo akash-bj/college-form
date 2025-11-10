@@ -187,21 +187,21 @@
 
     {% if structure == 'admin' %}
         {% if structured_data %}
-            {% for dept_name, sections in structured_data|sort %}
+            {% for dept_name, sections in structured_data|dictsort %} 
             <details class="folder" {% if loop.first %}open{% endif %}>
                 <summary class="folder-header">
                     <span class="material-icons folder-icon">chevron_right</span>
                     Department: {{ dept_name }}
                 </summary>
                 <div class="folder-content">
-                    {% for section_name, students in sections|sort %}
+                    {% for section_name, students in sections|dictsort %}
                     <details class="folder student-folder" {% if loop.first %}open{% endif %}>
                         <summary class="folder-header">
                             <span class="material-icons folder-icon">chevron_right</span>
                             Section: {{ section_name }}
                         </summary>
                         <div class="folder-content">
-                            {% for email, student_data in students|sort %}
+                            {% for email, student_data in students|dictsort %}
                             <details class="folder student-folder">
                                 <summary class="folder-header">
                                     <span class="material-icons folder-icon">chevron_right</span>
@@ -233,14 +233,14 @@
 
     {% elif structure == 'hod' or structure == 'faculty' %}
         {% if structured_data %}
-            {% for section_name, students in structured_data|sort %}
+            {% for section_name, students in structured_data|dictsort %}
             <details class="folder" {% if loop.first %}open{% endif %}>
                 <summary class="folder-header">
                     <span class="material-icons folder-icon">chevron_right</span>
                     Section: {{ section_name }}
                 </summary>
                 <div class="folder-content">
-                    {% for email, student_data in students|sort %}
+                    {% for email, student_data in students|dictsort %}
                     <details class="folder student-folder">
                         <summary class="folder-header">
                             <span class="material-icons folder-icon">chevron_right</span>
