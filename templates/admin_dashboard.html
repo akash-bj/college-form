@@ -14,13 +14,6 @@
         .mobile-menu-closed {
             transform: translateX(-100%);
         }
-        @media (max-width: 768px) {
-            .table-responsive {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-            }
-        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -156,31 +149,26 @@
                     </div>
                 </div>
                 
-                <!-- Users Table -->
-                <div class="bg-white rounded-lg shadow overflow-hidden">
+                <!-- Users Table - HIDDEN ON MOBILE -->
+                <div class="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
                     <div class="table-responsive">
                         <table class="min-w-full">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="py-3 px-2 lg:px-4 text-left text-sm">Name</th>
-                                    <th class="py-3 px-2 lg:px-4 text-left text-sm hidden sm:table-cell">Email</th>
-                                    <th class="py-3 px-2 lg:px-4 text-left text-sm">Role</th>
-                                    <th class="py-3 px-2 lg:px-4 text-left text-sm hidden md:table-cell">Department</th>
-                                    <th class="py-3 px-2 lg:px-4 text-left text-sm hidden lg:table-cell">Details</th>
-                                    <th class="py-3 px-2 lg:px-4 text-left text-sm">Actions</th>
+                                    <th class="py-3 px-4 text-left">Name</th>
+                                    <th class="py-3 px-4 text-left">Email</th>
+                                    <th class="py-3 px-4 text-left">Role</th>
+                                    <th class="py-3 px-4 text-left">Department</th>
+                                    <th class="py-3 px-4 text-left">Details</th>
+                                    <th class="py-3 px-4 text-left">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                                 {% for user in users %}
-                                <tr class="hover:bg-gray-50">
-                                    <td class="py-3 px-2 lg:px-4">
-                                        <div class="font-medium">{{ user.name }}</div>
-                                        <div class="text-sm text-gray-500 sm:hidden">{{ user.email }}</div>
-                                    </td>
-                                    <td class="py-3 px-2 lg:px-4 hidden sm:table-cell">
-                                        <div class="text-sm">{{ user.email }}</div>
-                                    </td>
-                                    <td class="py-3 px-2 lg:px-4">
+                                <tr>
+                                    <td class="py-3 px-4">{{ user.name }}</td>
+                                    <td class="py-3 px-4">{{ user.email }}</td>
+                                    <td class="py-3 px-4">
                                         <span class="px-2 py-1 rounded-full text-xs 
                                             {% if user.role == 'student' %}bg-blue-100 text-blue-800
                                             {% elif user.role == 'faculty' %}bg-yellow-100 text-yellow-800
@@ -189,10 +177,8 @@
                                             {{ user.role|upper }}
                                         </span>
                                     </td>
-                                    <td class="py-3 px-2 lg:px-4 hidden md:table-cell">
-                                        {{ user.department }}
-                                    </td>
-                                    <td class="py-3 px-2 lg:px-4 hidden lg:table-cell">
+                                    <td class="py-3 px-4">{{ user.department }}</td>
+                                    <td class="py-3 px-4">
                                         {% if user.role == 'student' %}
                                             Year {{ user.year }}, Sec {{ user.section }}
                                         {% elif user.role == 'faculty' %}
@@ -202,11 +188,10 @@
                                             {% endif %}
                                         {% endif %}
                                     </td>
-                                    <td class="py-3 px-2 lg:px-4">
+                                    <td class="py-3 px-4">
                                         <a href="{{ url_for('admin_edit_user', email=user.email) }}" 
-                                           class="text-blue-600 hover:text-blue-800 flex items-center text-sm">
-                                            <span class="material-icons text-sm mr-1">edit</span> 
-                                            <span class="hidden xs:inline">Edit</span>
+                                           class="text-blue-600 hover:text-blue-800 flex items-center">
+                                            <span class="material-icons text-sm mr-1">edit</span> Edit
                                         </a>
                                     </td>
                                 </tr>
@@ -220,8 +205,8 @@
                     </div>
                 </div>
 
-                <!-- Mobile User Cards (Alternative View) -->
-                <div class="lg:hidden mt-6 space-y-4">
+                <!-- Mobile User Cards - SHOW ONLY ON MOBILE -->
+                <div class="lg:hidden space-y-4">
                     {% for user in users %}
                     <div class="bg-white rounded-lg shadow p-4">
                         <div class="flex justify-between items-start mb-3">
@@ -313,17 +298,6 @@
             // This is where you would filter the users table
             // For now, we'll just log the selected tab
             console.log('Selected tab:', tab);
-            
-            // Example filtering logic (you'll need to implement this based on your data):
-            // const rows = document.querySelectorAll('tbody tr, .mobile-user-card');
-            // rows.forEach(row => {
-            //     const role = row.dataset.role;
-            //     if (tab === 'all' || role === tab) {
-            //         row.style.display = '';
-            //     } else {
-            //         row.style.display = 'none';
-            //     }
-            // });
         }
 
         // Close mobile menu on larger screens
