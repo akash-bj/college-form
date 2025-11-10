@@ -6,6 +6,9 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from functools import wraps
 from datetime import datetime, time
 from dotenv import load_dotenv
+import threading
+import time
+import requests
 
 load_dotenv()
 
@@ -30,6 +33,25 @@ db = firestore.client()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "supersecretkey")
+
+# Keep-alive function to prevent Render from sleeping
+def keep_alive():
+    while True:
+        try:
+            # Ping your own app every 14 minutes
+            render_url = "https://college-form.onrender.com"  # ⚠️ REPLACE WITH YOUR ACTUAL RENDER URL
+            response = requests.get(render_url, timeout=10)
+            print(f"✅ Keep-alive ping successful: {response.status_code}")
+        except Exception as e:
+            print(f"❌ Keep-alive ping failed: {e}")
+        time.sleep(840)  # 14 minutes (Render sleeps after 15 minutes of inactivity)
+
+# Start keep-alive thread when app starts (only on Render)
+if os.getenv('RENDER'):  # Render sets this environment variable
+    keep_alive_thread = threading.Thread(target=keep_alive)
+    keep_alive_thread.daemon = True
+    keep_alive_thread.start()
+    print("✅ Keep-alive thread started")
 
 # Login required decorator
 def login_required(f):
