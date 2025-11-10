@@ -652,7 +652,10 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Use environment variables set by Render for host and port
+    port = int(os.environ.get("PORT", 5000))
+    # We must use host='0.0.0.0' to listen on all public interfaces
+    app.run(host='0.0.0.0', port=port)
 
 
 
