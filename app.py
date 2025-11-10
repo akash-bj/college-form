@@ -459,32 +459,32 @@ def hod_reject(form_id):
     flash('Form has been rejected', 'warning')
     return redirect(url_for('hod_dashboard'))
 
-#
-# --- THIS IS THE ONLY FUNCTION YOU NEED TO REPLACE IN APP.PY ---
-#
-#
-# --- THIS IS THE ONLY FUNCTION YOU NEED TO REPLACE IN APP.PY ---
-#
+
+
 @app.route('/approved_forms')
 @login_required
 def approved_forms():
     role = session['role']
     
+    # Define a safe sorting key for all forms (handles missing timestamps by pushing them to the end)
+    def safe_sort_key(form):
+        # If timestamp is present, use it. Otherwise, use Jan 1, 1970.
+        return form.get('timestamp') if form.get('timestamp') is not None else datetime(1970, 1, 1)
+
     # 1. --- Student View (Simple List) ---
     if role == 'student':
         forms = []
         forms_ref = db.collection('forms')\
             .where('student_email', '==', session['email'])\
             .where('status', '==', 'approved')\
-            .stream()  # <-- I REMOVED THE .order_by() LINE THAT CAUSED THE ERROR
+            .stream()
         
         for form in forms_ref:
             form_data = form.to_dict()
             form_data['id'] = form.id
             forms.append(form_data)
         
-        # Sort forms in Python instead (good enough for one student)
-        forms.sort(key=lambda x: x.get('timestamp'), reverse=True)
+        forms.sort(key=safe_sort_key, reverse=True)
         
         return render_template('approved_forms.html', forms=forms, structure='student')
 
@@ -509,11 +509,11 @@ def approved_forms():
             
             structured_data[dept][section][email]['forms'].append(form)
         
-        # Sort the forms for each student (most recent first)
+        # Sort the forms for each student
         for dept in structured_data:
             for section in structured_data[dept]:
                 for email in structured_data[dept][section]:
-                    structured_data[dept][section][email]['forms'].sort(key=lambda x: x.get('timestamp'), reverse=True)
+                    structured_data[dept][section][email]['forms'].sort(key=safe_sort_key, reverse=True)
 
         return render_template('approved_forms.html', structured_data=structured_data, structure='admin')
 
@@ -538,10 +538,10 @@ def approved_forms():
             
             structured_data[section][email]['forms'].append(form)
             
-        # Sort the forms for each student (most recent first)
+        # Sort the forms for each student
         for section in structured_data:
             for email in structured_data[section]:
-                structured_data[section][email]['forms'].sort(key=lambda x: x.get('timestamp'), reverse=True)
+                structured_data[section][email]['forms'].sort(key=safe_sort_key, reverse=True)
 
         return render_template('approved_forms.html', structured_data=structured_data, structure='hod')
 
@@ -553,6 +553,7 @@ def approved_forms():
         if not sections:
              return render_template('approved_forms.html', structured_data={}, structure='faculty') 
 
+        # Firestore 'in' query optimization (same as before)
         if len(sections) > 30:
             all_forms = []
             for sec in sections:
@@ -580,16 +581,18 @@ def approved_forms():
             
             structured_data[section][email]['forms'].append(form)
         
-        # Sort the forms for each student (most recent first)
+        # Sort the forms for each student
         for section in structured_data:
             for email in structured_data[section]:
-                structured_data[section][email]['forms'].sort(key=lambda x: x.get('timestamp'), reverse=True)
+                structured_data[section][email]['forms'].sort(key=safe_sort_key, reverse=True)
 
         return render_template('approved_forms.html', structured_data=structured_data, structure='faculty')
         
-    # 5. --- Fallback (for any other role) ---
+    # 5. --- Fallback ---
     else:
         return render_template('approved_forms.html', forms=[], structure='student')
+
+
 @app.route('/admin/edit_user/<email>', methods=['GET', 'POST'])
 @login_required
 @role_required(['admin'])
@@ -650,5 +653,6 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
