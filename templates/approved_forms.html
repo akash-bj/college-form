@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approved Forms</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+        rel="stylesheet">
     <link rel="preload" href="/dashboard" as="document">
     <style>
         .form-card {
@@ -16,15 +19,10 @@
             margin-bottom: 1.5rem;
             border-left: 4px solid;
         }
-        .form-type-od {
-            border-left-color: #3b82f6;
-        }
-        .form-type-leave {
-            border-left-color: #10b981;
-        }
-        .form-type-gate {
-            border-left-color: #8b5cf6;
-        }
+        .form-type-od { border-left-color: #3b82f6; }
+        .form-type-leave { border-left-color: #10b981; }
+        .form-type-gate { border-left-color: #8b5cf6; }
+
         .status {
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -32,22 +30,12 @@
             font-size: 0.875rem;
             font-weight: 500;
         }
-        .status-approved {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .status-rejected {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .status-not_required {
-            background-color: #e2e3e5;
-            color: #383d41;
-        }
+        .status-approved { background-color: #d4edda; color: #155724; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-rejected { background-color: #f8d7da; color: #721c24; }
+        .status-not_required { background-color: #e2e3e5; color: #383d41; }
+        .status-pending_hod { background-color: #fff3cd; color: #856404; }
+
         .section-badge {
             background-color: #e3f2fd;
             color: #0d47a1;
@@ -57,103 +45,244 @@
             font-weight: 500;
             display: inline-block;
         }
-        .time-display {
-            font-weight: 500;
-            color: #1e40af;
+        .time-display { font-weight: 500; color: #1e40af; }
+
+        /* --- NEW FOLDER STYLES --- */
+        .folder {
+            background: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 0.75rem;
+            border: 1px solid #e5e7eb;
         }
+        .folder-header {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #1f2937;
+            list-style: none; /* Hide default triangle */
+        }
+        .folder-header::-webkit-details-marker { display: none; } /* Hide default triangle */
+        .folder-header:hover { background: #f9fafb; }
+        .folder-header .material-icons {
+            margin-right: 0.75rem;
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+        .folder-content {
+            padding: 0 1.25rem 1.25rem 1.25rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        details[open] > summary .folder-icon {
+            transform: rotate(90deg);
+        }
+        .student-folder {
+            margin-left: 1.5rem; /* Indent sub-folders */
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            padding-top: 1rem;
+        }
+        /* --- END NEW STYLES --- */
     </style>
 </head>
 <body class="bg-gray-100 p-6">
-    <a href="/dashboard" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 mb-6">
-        <span class="material-icons mr-1">arrow_back</span> Back to Dashboard
-    </a>
-    
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">All Approved Forms</h1>
-    
-    {% if forms %}
-        <div class="grid grid-cols-1 gap-6">
-            {% for form in forms %}
-            <div class="form-card form-type-{{ form.form_type }}">
-                <div class="flex flex-wrap justify-between items-center pb-3 mb-3 gap-2">
-                    <div>
-                        <h3 class="text-lg font-bold text-blue-600">
-                            {{ form.form_type|upper }} FORM
-                            <span class="text-sm font-normal text-gray-500">#{{ form.id[:8] }}</span>
-                        </h3>
-                        <div class="mt-1">
-                            <span class="status status-{{ form.status }}">{{ form.status|upper }}</span>
-                            <span class="status status-{{ form.hod_status }}">{{ form.hod_status|upper }}</span>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-500">
-                        Submitted: {{ form.timestamp.strftime('%Y-%m-%d %H:%M') }}
-                    </p>
+
+    {% macro render_form_card(form) %}
+    <div class="form-card form-type-{{ form.form_type }}">
+        <div
+            class="flex flex-wrap justify-between items-center pb-3 mb-3 gap-2">
+            <div>
+                <h3 class="text-lg font-bold text-blue-600">
+                    {{ form.form_type|upper }} FORM
+                    <span class="text-sm font-normal text-gray-500">#{{
+                        form.id[:8] }}</span>
+                </h3>
+                <div class="mt-1">
+                    <span class="status status-{{ form.status }}">{{
+                        form.status|upper }}</span>
+                    <span class="status status-{{ form.hod_status }}">{{
+                        form.hod_status|upper }}</span>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <p class="text-gray-600 font-medium">Student</p>
-                        <p class="font-medium">{{ form.student_name }}</p>
-                        <p class="text-sm text-gray-600">{{ form.student_email }}</p>
-                        <div class="mt-2 flex flex-wrap gap-1">
-                            <span class="section-badge">Year {{ form.student_year }}</span>
-                            <span class="section-badge">Sec {{ form.student_section }}</span>
-                            <span class="section-badge">Dept {{ form.student_department }}</span>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <p class="text-gray-600 font-medium">Details</p>
-                        {% if form.form_type == 'od' %}
-                            <p>Date: {{ form.date }}</p>
-                            <p>
-                                Time: 
-                                <span class="time-display">{{ form.start_time }}</span> 
-                                to 
-                                <span class="time-display">{{ form.end_time }}</span>
-                            </p>
-                            <p>Duration: {{ form.duration }}</p>
-                        {% elif form.form_type == 'leave' %}
-                            <p>
-                                From: {{ form.start_date }} 
-                                to {{ form.end_date }}
-                            </p>
-                            <p>Days: {{ form.days }}</p>
-                        {% elif form.form_type == 'gate' %}
-                            <p>Date: {{ form.date }}</p>
-                            <p>
-                                Out Time: 
-                                <span class="time-display">{{ form.out_time }}</span>
-                            </p>
-                            <p>Duration: {{ form.duration }} hours</p>
-                        {% endif %}
-                    </div>
+            </div>
+            <p class="text-sm text-gray-500">
+                Submitted: {{ form.timestamp.strftime('%Y-%m-%d %H:%M') if
+                form.timestamp }}
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <p class="text-gray-600 font-medium">Student</p>
+                <p class="font-medium">{{ form.student_name }}</p>
+                <p class="text-sm text-gray-600">{{ form.student_email }}</p>
+                <div class="mt-2 flex flex-wrap gap-1">
+                    <span class="section-badge">Year {{ form.student_year
+                        }}</span>
+                    <span class="section-badge">Sec {{ form.student_section
+                        }}</span>
+                    <span class="section-badge">Dept {{ form.student_department
+                        }}</span>
                 </div>
-                
-                <div class="mb-4">
-                    <p class="text-gray-600 font-medium">Reason</p>
-                    <p class="mt-1 p-3 bg-gray-50 rounded-lg">{{ form.reason }}</p>
-                </div>
-                
-                {% if form.approved_by %}
-                <div class="mt-4 pt-3 border-t">
-                    <p class="text-gray-600 font-medium">Approved By</p>
-                    <p>{{ form.approved_by|join(', ') }}</p>
-                </div>
-                {% endif %}
-                
-                {% if form.approved_at %}
-                <div class="mt-2 text-sm text-gray-500">
-                    Approved at: {{ form.approved_at.strftime('%Y-%m-%d %H:%M') }}
-                </div>
+            </div>
+
+            <div>
+                <p class="text-gray-600 font-medium">Details</p>
+                {% if form.form_type == 'od' %}
+                <p>Date: {{ form.date }}</p>
+                <p>
+                    Time:
+                    <span class="time-display">{{ form.start_time }}</span>
+                    to
+                    <span class="time-display">{{ form.end_time }}</span>
+                </p>
+                <p>Duration: {{ form.duration }}</p>
+                {% elif form.form_type == 'leave' %}
+                <p>
+                    From: {{ form.start_date }}
+                    to {{ form.end_date }}
+                </p>
+                <p>Days: {{ form.days }}</p>
+                {% elif form.form_type == 'gate' %}
+                <p>Date: {{ form.date }}</p>
+                <p>
+                    Out Time:
+                    <span class="time-display">{{ form.out_time }}</span>
+                </p>
+                <p>Duration: {{ form.duration }} hours</p>
                 {% endif %}
             </div>
-            {% endfor %}
         </div>
+
+        <div class="mb-4">
+            <p class="text-gray-600 font-medium">Reason</p>
+            <p class="mt-1 p-3 bg-gray-50 rounded-lg">{{ form.reason }}</p>
+        </div>
+
+        {% if form.approved_by %}
+        <div class="mt-4 pt-3 border-t">
+            <p class="text-gray-600 font-medium">Approved By</p>
+            <p>{{ form.approved_by|join(', ') }}</p>
+        </div>
+        {% endif %}
+
+        {% if form.approved_at %}
+        <div class="mt-2 text-sm text-gray-500">
+            Approved at: {{ form.approved_at.strftime('%Y-%m-%d %H:%M') if
+            form.approved_at }}
+        </div>
+        {% endif %}
+    </div>
+    {% endmacro %}
+    <a href="/dashboard"
+        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 mb-6">
+        <span class="material-icons mr-1">arrow_back</span> Back to Dashboard
+    </a>
+
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">All Approved Forms</h1>
+
+    {% if structure == 'admin' %}
+        {% if structured_data %}
+            {% for dept_name, sections in structured_data|sort %}
+            <details class="folder" {% if loop.first %}open{% endif %}>
+                <summary class="folder-header">
+                    <span class="material-icons folder-icon">chevron_right</span>
+                    Department: {{ dept_name }}
+                </summary>
+                <div class="folder-content">
+                    {% for section_name, students in sections|sort %}
+                    <details class="folder student-folder" {% if loop.first %}open{% endif %}>
+                        <summary class="folder-header">
+                            <span class="material-icons folder-icon">chevron_right</span>
+                            Section: {{ section_name }}
+                        </summary>
+                        <div class="folder-content">
+                            {% for email, student_data in students|sort %}
+                            <details class="folder student-folder">
+                                <summary class="folder-header">
+                                    <span class="material-icons folder-icon">chevron_right</span>
+                                    {{ student_data.name }} ({{ email }})
+                                    <span class="ml-2 section-badge">{{ student_data.forms|length }} forms</span>
+                                </summary>
+                                <div class="folder-content form-grid">
+                                    {% for form in student_data.forms %}
+                                        {{ render_form_card(form) }}
+                                    {% endfor %}
+                                </div>
+                            </details>
+                            {% else %}
+                                <p class="text-gray-500 p-4">No students found.</p>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% else %}
+                        <p class="text-gray-500 p-4">No sections found.</p>
+                    {% endfor %}
+                </div>
+            </details>
+            {% endfor %}
+        {% else %}
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-gray-600">No approved forms found.</p>
+            </div>
+        {% endif %}
+
+    {% elif structure == 'hod' or structure == 'faculty' %}
+        {% if structured_data %}
+            {% for section_name, students in structured_data|sort %}
+            <details class="folder" {% if loop.first %}open{% endif %}>
+                <summary class="folder-header">
+                    <span class="material-icons folder-icon">chevron_right</span>
+                    Section: {{ section_name }}
+                </summary>
+                <div class="folder-content">
+                    {% for email, student_data in students|sort %}
+                    <details class="folder student-folder">
+                        <summary class="folder-header">
+                            <span class="material-icons folder-icon">chevron_right</span>
+                            {{ student_data.name }} ({{ email }})
+                            <span class="ml-2 section-badge">{{ student_data.forms|length }} forms</span>
+                        </summary>
+                        <div class="folder-content form-grid">
+                            {% for form in student_data.forms %}
+                                {{ render_form_card(form) }}
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% else %}
+                        <p class="text-gray-500 p-4">No students found for this section.</p>
+                    {% endfor %}
+                </div>
+            </details>
+            {% endfor %}
+        {% else %}
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-gray-600">No approved forms found for your assigned sections.</p>
+            </div>
+        {% endif %}
+
+    {% elif structure == 'student' %}
+        {% if forms %}
+            <div class="grid grid-cols-1 gap-6">
+                {% for form in forms %}
+                    {{ render_form_card(form) }}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-gray-600">No approved forms found.</p>
+            </div>
+        {% endif %}
+
     {% else %}
         <div class="bg-white rounded-lg shadow p-6 text-center">
-            <p class="text-gray-600">No approved forms found.</p>
+            <p class="text-gray-600">No forms to display.</p>
         </div>
     {% endif %}
+
 </body>
 </html>
