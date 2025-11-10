@@ -462,6 +462,9 @@ def hod_reject(form_id):
 #
 # --- THIS IS THE ONLY FUNCTION YOU NEED TO REPLACE IN APP.PY ---
 #
+#
+# --- THIS IS THE ONLY FUNCTION YOU NEED TO REPLACE IN APP.PY ---
+#
 @app.route('/approved_forms')
 @login_required
 def approved_forms():
@@ -470,22 +473,24 @@ def approved_forms():
     # 1. --- Student View (Simple List) ---
     if role == 'student':
         forms = []
-        # Get forms just for this student, ordered by most recent
         forms_ref = db.collection('forms')\
             .where('student_email', '==', session['email'])\
             .where('status', '==', 'approved')\
-            .order_by('timestamp', direction=firestore.Query.DESCENDING)\
-            .stream()
+            .stream()  # <-- I REMOVED THE .order_by() LINE THAT CAUSED THE ERROR
+        
         for form in forms_ref:
             form_data = form.to_dict()
             form_data['id'] = form.id
             forms.append(form_data)
-        # Pass the simple list and 'student' structure
+        
+        # Sort forms in Python instead (good enough for one student)
+        forms.sort(key=lambda x: x.get('timestamp'), reverse=True)
+        
         return render_template('approved_forms.html', forms=forms, structure='student')
 
     # 2. --- Admin View (Dept -> Section -> Student -> Forms) ---
     elif role == 'admin':
-        structured_data = {} # This will be the nested dictionary
+        structured_data = {} 
         all_forms_ref = db.collection('forms').where('status', '==', 'approved').stream()
             
         for form_doc in all_forms_ref:
@@ -495,24 +500,26 @@ def approved_forms():
             section = form.get('student_section', 'Unknown Section')
             email = form.get('student_email', 'Unknown Student')
             
-            # Create nested dictionaries if they don't exist
             if dept not in structured_data:
                 structured_data[dept] = {}
             if section not in structured_data[dept]:
                 structured_data[dept][section] = {}
             if email not in structured_data[dept][section]:
-                # Store student name for easier display in the folder
                 structured_data[dept][section][email] = {'name': form.get('student_name'), 'forms': []}
             
             structured_data[dept][section][email]['forms'].append(form)
         
-        # Pass the nested dictionary and 'admin' structure
+        # Sort the forms for each student (most recent first)
+        for dept in structured_data:
+            for section in structured_data[dept]:
+                for email in structured_data[dept][section]:
+                    structured_data[dept][section][email]['forms'].sort(key=lambda x: x.get('timestamp'), reverse=True)
+
         return render_template('approved_forms.html', structured_data=structured_data, structure='admin')
 
     # 3. --- HOD View (Section -> Student -> Forms) ---
     elif role == 'hod':
         structured_data = {}
-        # Get forms only for the HOD's department
         dept_forms_ref = db.collection('forms')\
             .where('student_department', '==', session.get('department', ''))\
             .where('status', '==', 'approved')\
@@ -531,22 +538,22 @@ def approved_forms():
             
             structured_data[section][email]['forms'].append(form)
             
-        # Pass the nested dictionary and 'hod' structure
+        # Sort the forms for each student (most recent first)
+        for section in structured_data:
+            for email in structured_data[section]:
+                structured_data[section][email]['forms'].sort(key=lambda x: x.get('timestamp'), reverse=True)
+
         return render_template('approved_forms.html', structured_data=structured_data, structure='hod')
 
     # 4. --- Faculty View (Section -> Student -> Forms) ---
     elif role == 'faculty':
         structured_data = {}
-        sections = session.get('sections', []) # Get sections this faculty teaches
+        sections = session.get('sections', [])
         
         if not sections:
-             # If faculty teaches no sections, send empty data
              return render_template('approved_forms.html', structured_data={}, structure='faculty') 
 
-        # Firestore 'in' query is limited to 30 items. 
-        # We must check if the faculty is in more than 30 sections.
         if len(sections) > 30:
-            # If > 30, we have to query one by one (slower but works)
             all_forms = []
             for sec in sections:
                  sec_forms_ref = db.collection('forms')\
@@ -555,7 +562,6 @@ def approved_forms():
                     .stream()
                  all_forms.extend(sec_forms_ref)
         else:
-             # If < 30, we can use one 'in' query (fast)
              all_forms = db.collection('forms')\
                 .where('student_section', 'in', sections)\
                 .where('status', '==', 'approved')\
@@ -573,13 +579,16 @@ def approved_forms():
                 structured_data[section][email] = {'name': form.get('student_name'), 'forms': []}
             
             structured_data[section][email]['forms'].append(form)
+        
+        # Sort the forms for each student (most recent first)
+        for section in structured_data:
+            for email in structured_data[section]:
+                structured_data[section][email]['forms'].sort(key=lambda x: x.get('timestamp'), reverse=True)
 
-        # Pass the nested dictionary and 'faculty' structure
         return render_template('approved_forms.html', structured_data=structured_data, structure='faculty')
         
     # 5. --- Fallback (for any other role) ---
     else:
-        # Default to an empty student view
         return render_template('approved_forms.html', forms=[], structure='student')
 @app.route('/admin/edit_user/<email>', methods=['GET', 'POST'])
 @login_required
@@ -641,4 +650,5 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
