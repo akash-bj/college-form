@@ -7,11 +7,39 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="preload" href="/dashboard" as="document">
+    <style>
+        .mobile-menu-open {
+            transform: translateX(0);
+        }
+        .mobile-menu-closed {
+            transform: translateX(-100%);
+        }
+        @media (max-width: 768px) {
+            .table-responsive {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
+    <!-- Mobile Header -->
+    <div class="lg:hidden bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold">Digital Forms</h2>
+                <p class="text-sm text-blue-200">Admin Portal</p>
+            </div>
+            <button id="mobileMenuBtn" class="text-white">
+                <span class="material-icons text-2xl">menu</span>
+            </button>
+        </div>
+    </div>
+
     <div class="flex h-screen">
-        <!-- Sidebar -->
-        <div class="w-64 bg-gradient-to-b from-blue-600 to-purple-700 text-white p-4">
+        <!-- Sidebar - Desktop -->
+        <div class="hidden lg:flex lg:w-64 bg-gradient-to-b from-blue-600 to-purple-700 text-white p-4 flex-col">
             <div class="p-4 border-b border-blue-500 mb-6">
                 <h2 class="text-xl font-bold">Digital Forms</h2>
                 <p class="text-sm text-blue-200">Admin Portal</p>
@@ -27,7 +55,7 @@
                 </div>
             </div>
             
-            <ul class="space-y-1">
+            <ul class="space-y-1 flex-1">
                 <li>
                     <a href="{{ url_for('admin_dashboard') }}" class="flex items-center p-2 bg-blue-500 rounded-lg">
                         <span class="material-icons mr-3">dashboard</span>
@@ -48,11 +76,59 @@
                 </li>
             </ul>
         </div>
+
+        <!-- Mobile Sidebar -->
+        <div id="mobileSidebar" class="lg:hidden fixed inset-0 z-50 mobile-menu-closed transition-transform duration-300">
+            <div class="fixed inset-0 bg-black bg-opacity-50" id="mobileOverlay"></div>
+            <div class="relative w-64 h-full bg-gradient-to-b from-blue-600 to-purple-700 text-white p-4">
+                <div class="flex justify-between items-center p-4 border-b border-blue-500 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold">Digital Forms</h2>
+                        <p class="text-sm text-blue-200">Admin Portal</p>
+                    </div>
+                    <button id="closeMobileMenu" class="text-white">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-3 mb-6 p-2">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center font-bold text-blue-600">
+                        {{ session.name[0] }}
+                    </div>
+                    <div>
+                        <h4 class="font-semibold">Admin {{ session.name.split(' ')[0] }}</h4>
+                        <p class="text-xs text-blue-200">{{ session.email }}</p>
+                    </div>
+                </div>
+                
+                <ul class="space-y-1">
+                    <li>
+                        <a href="{{ url_for('admin_dashboard') }}" class="flex items-center p-2 bg-blue-500 rounded-lg">
+                            <span class="material-icons mr-3">dashboard</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('approved_forms') }}" class="flex items-center p-2 hover:bg-blue-500 rounded-lg">
+                            <span class="material-icons mr-3">assignment_turned_in</span>
+                            <span>Approved Forms</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('logout') }}" class="flex items-center p-2 hover:bg-blue-500 rounded-lg">
+                            <span class="material-icons mr-3">logout</span>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
         
         <!-- Main Content -->
-        <div class="flex-1 overflow-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
+        <div class="flex-1 overflow-auto lg:ml-0">
+            <div class="p-4 lg:p-6">
+                <!-- Header -->
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
                         <p class="text-gray-600">Manage users and system settings</p>
@@ -61,92 +137,200 @@
                 
                 <!-- Search and Filter -->
                 <div class="bg-white rounded-lg shadow p-4 mb-6">
-                    <form action="{{ url_for('admin_search_users') }}" method="GET" class="flex gap-3">
+                    <form action="{{ url_for('admin_search_users') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
                         <input type="text" name="q" placeholder="Search by name or email" 
                                class="flex-1 p-2 border border-gray-300 rounded-lg">
-                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center">
                             <span class="material-icons mr-1">search</span> Search
                         </button>
                     </form>
                 </div>
                 
                 <!-- Tabs -->
-                <div class="mb-6">
-                    <div class="flex border-b">
-                        <button class="tab-btn active" data-tab="all">All Users</button>
-                        <button class="tab-btn" data-tab="students">Students</button>
-                        <button class="tab-btn" data-tab="faculty">Faculty</button>
-                        <button class="tab-btn" data-tab="hod">HODs</button>
+                <div class="mb-6 overflow-x-auto">
+                    <div class="flex border-b min-w-max">
+                        <button class="tab-btn active px-4 py-2 whitespace-nowrap" data-tab="all">All Users</button>
+                        <button class="tab-btn px-4 py-2 whitespace-nowrap" data-tab="students">Students</button>
+                        <button class="tab-btn px-4 py-2 whitespace-nowrap" data-tab="faculty">Faculty</button>
+                        <button class="tab-btn px-4 py-2 whitespace-nowrap" data-tab="hod">HODs</button>
                     </div>
                 </div>
                 
                 <!-- Users Table -->
                 <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="py-3 px-4 text-left">Name</th>
-                                <th class="py-3 px-4 text-left">Email</th>
-                                <th class="py-3 px-4 text-left">Role</th>
-                                <th class="py-3 px-4 text-left">Department</th>
-                                <th class="py-3 px-4 text-left">Details</th>
-                                <th class="py-3 px-4 text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            {% for user in users %}
-                            <tr>
-                                <td class="py-3 px-4">{{ user.name }}</td>
-                                <td class="py-3 px-4">{{ user.email }}</td>
-                                <td class="py-3 px-4">
-                                    <span class="px-2 py-1 rounded-full text-xs 
-                                        {% if user.role == 'student' %}bg-blue-100 text-blue-800
-                                        {% elif user.role == 'faculty' %}bg-yellow-100 text-yellow-800
-                                        {% elif user.role == 'hod' %}bg-green-100 text-green-800
-                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                        {{ user.role|upper }}
-                                    </span>
-                                </td>
-                                <td class="py-3 px-4">{{ user.department }}</td>
-                                <td class="py-3 px-4">
-                                    {% if user.role == 'student' %}
-                                        Year {{ user.year }}, Sec {{ user.section }}
-                                    {% elif user.role == 'faculty' %}
-                                        Sections: {{ user.sections|join(', ') }}
-                                        {% if user.coordinator_section %}
-                                            <br>Coordinator: {{ user.coordinator_section }}
+                    <div class="table-responsive">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="py-3 px-2 lg:px-4 text-left text-sm">Name</th>
+                                    <th class="py-3 px-2 lg:px-4 text-left text-sm hidden sm:table-cell">Email</th>
+                                    <th class="py-3 px-2 lg:px-4 text-left text-sm">Role</th>
+                                    <th class="py-3 px-2 lg:px-4 text-left text-sm hidden md:table-cell">Department</th>
+                                    <th class="py-3 px-2 lg:px-4 text-left text-sm hidden lg:table-cell">Details</th>
+                                    <th class="py-3 px-2 lg:px-4 text-left text-sm">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                {% for user in users %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-2 lg:px-4">
+                                        <div class="font-medium">{{ user.name }}</div>
+                                        <div class="text-sm text-gray-500 sm:hidden">{{ user.email }}</div>
+                                    </td>
+                                    <td class="py-3 px-2 lg:px-4 hidden sm:table-cell">
+                                        <div class="text-sm">{{ user.email }}</div>
+                                    </td>
+                                    <td class="py-3 px-2 lg:px-4">
+                                        <span class="px-2 py-1 rounded-full text-xs 
+                                            {% if user.role == 'student' %}bg-blue-100 text-blue-800
+                                            {% elif user.role == 'faculty' %}bg-yellow-100 text-yellow-800
+                                            {% elif user.role == 'hod' %}bg-green-100 text-green-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ user.role|upper }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-2 lg:px-4 hidden md:table-cell">
+                                        {{ user.department }}
+                                    </td>
+                                    <td class="py-3 px-2 lg:px-4 hidden lg:table-cell">
+                                        {% if user.role == 'student' %}
+                                            Year {{ user.year }}, Sec {{ user.section }}
+                                        {% elif user.role == 'faculty' %}
+                                            Sections: {{ user.sections|join(', ') }}
+                                            {% if user.coordinator_section %}
+                                                <br>Coordinator: {{ user.coordinator_section }}
+                                            {% endif %}
                                         {% endif %}
-                                    {% endif %}
-                                </td>
-                                <td class="py-3 px-4">
-                                    <a href="{{ url_for('admin_edit_user', email=user.email) }}" 
-                                       class="text-blue-600 hover:text-blue-800 flex items-center">
-                                        <span class="material-icons text-sm mr-1">edit</span> Edit
-                                    </a>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="6" class="py-4 px-4 text-center text-gray-500">No users found</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td class="py-3 px-2 lg:px-4">
+                                        <a href="{{ url_for('admin_edit_user', email=user.email) }}" 
+                                           class="text-blue-600 hover:text-blue-800 flex items-center text-sm">
+                                            <span class="material-icons text-sm mr-1">edit</span> 
+                                            <span class="hidden xs:inline">Edit</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="py-4 px-4 text-center text-gray-500">No users found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile User Cards (Alternative View) -->
+                <div class="lg:hidden mt-6 space-y-4">
+                    {% for user in users %}
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-semibold text-lg">{{ user.name }}</h3>
+                                <p class="text-gray-600 text-sm">{{ user.email }}</p>
+                            </div>
+                            <span class="px-2 py-1 rounded-full text-xs 
+                                {% if user.role == 'student' %}bg-blue-100 text-blue-800
+                                {% elif user.role == 'faculty' %}bg-yellow-100 text-yellow-800
+                                {% elif user.role == 'hod' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ user.role|upper }}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Department:</span>
+                                <span>{{ user.department }}</span>
+                            </div>
+                            {% if user.role == 'student' %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Class:</span>
+                                <span>Year {{ user.year }}, Sec {{ user.section }}</span>
+                            </div>
+                            {% elif user.role == 'faculty' %}
+                            <div>
+                                <span class="text-gray-500">Sections:</span>
+                                <span>{{ user.sections|join(', ') }}</span>
+                                {% if user.coordinator_section %}
+                                <div class="text-gray-500">Coordinator: {{ user.coordinator_section }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-3 pt-3 border-t">
+                            <a href="{{ url_for('admin_edit_user', email=user.email) }}" 
+                               class="text-blue-600 hover:text-blue-800 flex items-center justify-center">
+                                <span class="material-icons text-sm mr-1">edit</span> Edit User
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="bg-white rounded-lg shadow p-8 text-center">
+                        <p class="text-gray-500">No users found</p>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        function openMobileMenu() {
+            mobileSidebar.classList.remove('mobile-menu-closed');
+            mobileSidebar.classList.add('mobile-menu-open');
+        }
+
+        function closeMobileMenuFunc() {
+            mobileSidebar.classList.remove('mobile-menu-open');
+            mobileSidebar.classList.add('mobile-menu-closed');
+        }
+
+        mobileMenuBtn.addEventListener('click', openMobileMenu);
+        closeMobileMenu.addEventListener('click', closeMobileMenuFunc);
+        mobileOverlay.addEventListener('click', closeMobileMenuFunc);
+
         // Tab functionality
         document.querySelectorAll('.tab-btn').forEach(button => {
             button.addEventListener('click', function() {
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
                 
-                // In a real app, you would filter the table here
-                // For simplicity, we're just changing the active tab
+                const tab = this.dataset.tab;
+                // You can add tab filtering logic here
+                filterUsersByTab(tab);
             });
+        });
+
+        function filterUsersByTab(tab) {
+            // This is where you would filter the users table
+            // For now, we'll just log the selected tab
+            console.log('Selected tab:', tab);
+            
+            // Example filtering logic (you'll need to implement this based on your data):
+            // const rows = document.querySelectorAll('tbody tr, .mobile-user-card');
+            // rows.forEach(row => {
+            //     const role = row.dataset.role;
+            //     if (tab === 'all' || role === tab) {
+            //         row.style.display = '';
+            //     } else {
+            //         row.style.display = 'none';
+            //     }
+            // });
+        }
+
+        // Close mobile menu on larger screens
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                closeMobileMenuFunc();
+            }
         });
     </script>
 </body>
