@@ -47,7 +47,7 @@
         }
         .time-display { font-weight: 500; color: #1e40af; }
 
-        /* --- NEW FOLDER STYLES --- */
+        /* --- FOLDER STYLES --- */
         .folder {
             background: #fff;
             border-radius: 0.5rem;
@@ -62,9 +62,9 @@
             cursor: pointer;
             font-weight: 600;
             color: #1f2937;
-            list-style: none; /* Hide default triangle */
+            list-style: none;
         }
-        .folder-header::-webkit-details-marker { display: none; } /* Hide default triangle */
+        .folder-header::-webkit-details-marker { display: none; }
         .folder-header:hover { background: #f9fafb; }
         .folder-header .material-icons {
             margin-right: 0.75rem;
@@ -78,8 +78,9 @@
         details[open] > summary .folder-icon {
             transform: rotate(90deg);
         }
+        /* Default Indentation for Desktop/Tablet */
         .student-folder {
-            margin-left: 1.5rem; /* Indent sub-folders */
+            margin-left: 1.5rem; 
         }
         .form-grid {
             display: grid;
@@ -87,7 +88,23 @@
             gap: 1.5rem;
             padding-top: 1rem;
         }
-        /* --- END NEW STYLES --- */
+        
+        /* --- MOBILE COMPATIBILITY FIX --- */
+        @media (max-width: 640px) {
+            .student-folder {
+                /* Reduced indentation on small screens */
+                margin-left: 0.5rem; 
+            }
+            body {
+                /* Reduced body padding for maximum screen usage */
+                padding: 0.5rem;
+            }
+            .folder-content {
+                /* Reduced inner padding for folder content */
+                padding: 0 0.75rem 0.75rem 0.75rem;
+            }
+        }
+        /* --- END MOBILE FIX --- */
     </style>
 </head>
 <body class="bg-gray-100 p-6">
