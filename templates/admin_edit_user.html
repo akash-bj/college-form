@@ -6,111 +6,203 @@
     <title>Edit User | Digital Forms System</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .mobile-menu-open {
+            transform: translateX(0);
+        }
+        .mobile-menu-closed {
+            transform: translateX(-100%);
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
+    <!-- Mobile Header -->
+    <div class="lg:hidden bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold">Digital Forms</h2>
+                <p class="text-sm text-blue-200">Edit User</p>
+            </div>
+            <a href="{{ url_for('admin_dashboard') }}" class="text-white">
+                <span class="material-icons">arrow_back</span>
+            </a>
+        </div>
+    </div>
+
     <div class="flex h-screen">
-        <!-- Sidebar (same as admin dashboard) -->
-        <div class="w-64 bg-gradient-to-b from-blue-600 to-purple-700 text-white p-4">
-            <!-- ... same as admin_dashboard ... -->
+        <!-- Sidebar - Desktop -->
+        <div class="hidden lg:flex lg:w-64 bg-gradient-to-b from-blue-600 to-purple-700 text-white p-4 flex-col">
+            <div class="p-4 border-b border-blue-500 mb-6">
+                <h2 class="text-xl font-bold">Digital Forms</h2>
+                <p class="text-sm text-blue-200">Admin Portal</p>
+            </div>
+            
+            <div class="flex items-center gap-3 mb-6 p-2">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center font-bold text-blue-600">
+                    {{ session.name[0] }}
+                </div>
+                <div>
+                    <h4 class="font-semibold">Admin {{ session.name.split(' ')[0] }}</h4>
+                    <p class="text-xs text-blue-200">{{ session.email }}</p>
+                </div>
+            </div>
+            
+            <ul class="space-y-1 flex-1">
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class="flex items-center p-2 hover:bg-blue-500 rounded-lg">
+                        <span class="material-icons mr-3">dashboard</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('approved_forms') }}" class="flex items-center p-2 hover:bg-blue-500 rounded-lg">
+                        <span class="material-icons mr-3">assignment_turned_in</span>
+                        <span>Approved Forms</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('logout') }}" class="flex items-center p-2 hover:bg-blue-500 rounded-lg">
+                        <span class="material-icons mr-3">logout</span>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
         </div>
         
         <!-- Main Content -->
-        <div class="flex-1 overflow-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
+        <div class="flex-1 overflow-auto lg:ml-0">
+            <div class="p-4 lg:p-6">
+                <!-- Header -->
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-800">Edit User</h2>
                         <p class="text-gray-600">Manage user roles and permissions</p>
                     </div>
-                    <a href="{{ url_for('admin_dashboard') }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                    <a href="{{ url_for('admin_dashboard') }}" class="text-blue-600 hover:text-blue-800 flex items-center justify-center lg:justify-start">
                         <span class="material-icons mr-1">arrow_back</span> Back to Dashboard
                     </a>
                 </div>
                 
-                <div class="bg-white rounded-lg shadow p-6 max-w-3xl">
+                <!-- User Info Card -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6 lg:hidden">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white">
+                            {{ user.name[0] }}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">{{ user.name }}</h3>
+                            <p class="text-sm text-gray-600">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                            <span class="text-gray-500">Role:</span>
+                            <span class="font-medium">{{ user.role|upper }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Department:</span>
+                            <span class="font-medium">{{ user.department }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Form -->
+                <div class="bg-white rounded-lg shadow p-4 lg:p-6">
                     <form method="POST">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div>
-                                <label class="block text-gray-700 mb-2">Name</label>
-                                <input type="text" value="{{ user.name }}" class="w-full p-2 border border-gray-300 rounded-lg" disabled>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 mb-2">Email</label>
-                                <input type="email" value="{{ user.email }}" class="w-full p-2 border border-gray-300 rounded-lg" disabled>
+                        <!-- Basic Info -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Name</label>
+                                    <input type="text" value="{{ user.name }}" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Email</label>
+                                    <input type="email" value="{{ user.email }}" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" disabled>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div>
-                                <label class="block text-gray-700 mb-2">Role *</label>
-                                <select name="role" class="w-full p-2 border border-gray-300 rounded-lg" required>
-                                    <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
-                                    <option value="faculty" {% if user.role == 'faculty' %}selected{% endif %}>Faculty</option>
-                                    <option value="hod" {% if user.role == 'hod' %}selected{% endif %}>HOD</option>
-                                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 mb-2">Department *</label>
-                                <input type="text" name="department" value="{{ user.department }}" 
-                                       class="w-full p-2 border border-gray-300 rounded-lg" required>
+
+                        <!-- Role and Department -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Role & Department</h3>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Role *</label>
+                                    <select name="role" class="w-full p-3 border border-gray-300 rounded-lg" required onchange="toggleRoleFields()">
+                                        <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
+                                        <option value="faculty" {% if user.role == 'faculty' %}selected{% endif %}>Faculty</option>
+                                        <option value="hod" {% if user.role == 'hod' %}selected{% endif %}>HOD</option>
+                                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Department *</label>
+                                    <input type="text" name="department" value="{{ user.department }}" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg" required>
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Student Specific Fields -->
-                        {% if user.role == 'student' %}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div id="studentFields" class="mb-6 {% if user.role != 'student' %}hidden{% endif %}">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Student Information</h3>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Year *</label>
+                                    <select name="year" class="w-full p-3 border border-gray-300 rounded-lg">
+                                        {% for year in range(1,5) %}
+                                        <option value="{{ year }}" {% if user.year == year|string %}selected{% endif %}>Year {{ year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Section *</label>
+                                    <select name="section" class="w-full p-3 border border-gray-300 rounded-lg">
+                                        <option value="A" {% if user.section == 'A' %}selected{% endif %}>A</option>
+                                        <option value="B" {% if user.section == 'B' %}selected{% endif %}>B</option>
+                                        <option value="C" {% if user.section == 'C' %}selected{% endif %}>C</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Faculty Specific Fields -->
+                        <div id="facultyFields" class="mb-6 {% if user.role != 'faculty' %}hidden{% endif %}">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Faculty Information</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-3">Sections *</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    {% for section in all_sections %}
+                                    <div class="flex items-center">
+                                        <input type="checkbox" name="sections" value="{{ section }}" 
+                                               id="section_{{ loop.index }}" class="mr-2 h-4 w-4"
+                                               {% if section in user.sections %}checked{% endif %}>
+                                        <label for="section_{{ loop.index }}" class="text-sm">{{ section }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
                             <div>
-                                <label class="block text-gray-700 mb-2">Year *</label>
-                                <select name="year" class="w-full p-2 border border-gray-300 rounded-lg" required>
-                                    {% for year in range(1,5) %}
-                                    <option value="{{ year }}" {% if user.year == year|string %}selected{% endif %}>Year {{ year }}</option>
+                                <label class="block text-gray-700 mb-2">Coordinator Section</label>
+                                <select name="coordinator_section" class="w-full p-3 border border-gray-300 rounded-lg">
+                                    <option value="">Not a Coordinator</option>
+                                    {% for section in all_sections %}
+                                    <option value="{{ section }}" {% if user.coordinator_section == section %}selected{% endif %}>{{ section }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-gray-700 mb-2">Section *</label>
-                                <select name="section" class="w-full p-2 border border-gray-300 rounded-lg" required>
-                                    <option value="A" {% if user.section == 'A' %}selected{% endif %}>A</option>
-                                    <option value="B" {% if user.section == 'B' %}selected{% endif %}>B</option>
-                                    <option value="C" {% if user.section == 'C' %}selected{% endif %}>C</option>
-                                </select>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Faculty Specific Fields -->
-                        {% if user.role == 'faculty' %}
-                        <div class="mb-6">
-                            <label class="block text-gray-700 mb-2">Sections *</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                {% for section in all_sections %}
-                                <div class="flex items-center">
-                                    <input type="checkbox" name="sections" value="{{ section }}" 
-                                           id="section_{{ loop.index }}" class="mr-2"
-                                           {% if section in user.sections %}checked{% endif %}>
-                                    <label for="section_{{ loop.index }}">{{ section }}</label>
-                                </div>
-                                {% endfor %}
-                            </div>
                         </div>
                         
-                        <div class="mb-6">
-                            <label class="block text-gray-700 mb-2">Coordinator Section</label>
-                            <select name="coordinator_section" class="w-full p-2 border border-gray-300 rounded-lg">
-                                <option value="">Not a Coordinator</option>
-                                {% for section in all_sections %}
-                                <option value="{{ section }}" {% if user.coordinator_section == section %}selected{% endif %}>{{ section }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="flex justify-end gap-3">
-                            <a href="{{ url_for('admin_dashboard') }}" class="px-4 py-2 border border-gray-300 rounded-lg">
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t">
+                            <a href="{{ url_for('admin_dashboard') }}" class="px-6 py-3 border border-gray-300 rounded-lg text-center">
                                 Cancel
                             </a>
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                            <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center">
                                 Save Changes
                             </button>
                         </div>
@@ -119,5 +211,27 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function toggleRoleFields() {
+            const role = document.querySelector('select[name="role"]').value;
+            
+            // Hide all role-specific fields
+            document.getElementById('studentFields').classList.add('hidden');
+            document.getElementById('facultyFields').classList.add('hidden');
+            
+            // Show relevant fields based on selected role
+            if (role === 'student') {
+                document.getElementById('studentFields').classList.remove('hidden');
+            } else if (role === 'faculty') {
+                document.getElementById('facultyFields').classList.remove('hidden');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleRoleFields();
+        });
+    </script>
 </body>
 </html>
