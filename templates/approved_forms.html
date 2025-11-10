@@ -78,15 +78,9 @@
         details[open] > summary .folder-icon {
             transform: rotate(90deg);
         }
-        /* Indentation for Student Folders (Department/Section/Student) */
+        /* Default Indentation for Desktop/Tablet */
         .student-folder {
             margin-left: 1.5rem; 
-        }
-        /* NEW: Indentation for Form Type Folders */
-        .form-type-folder {
-            margin-left: 1.5rem;
-            border-left: 3px solid #6366f1; /* Distinct color for this new level */
-            margin-top: 0.5rem;
         }
         .form-grid {
             display: grid;
@@ -97,7 +91,7 @@
         
         /* --- MOBILE COMPATIBILITY FIX --- */
         @media (max-width: 640px) {
-            .student-folder, .form-type-folder {
+            .student-folder {
                 /* Reduced indentation on small screens */
                 margin-left: 0.5rem; 
             }
@@ -231,19 +225,9 @@
                                     {{ student_data.name }} ({{ email }})
                                     <span class="ml-2 section-badge">{{ student_data.forms|length }} forms</span>
                                 </summary>
-                                <div class="folder-content">
-                                    {% for form_type, forms_of_type in student_data.forms|group_by('form_type') %}
-                                    <details class="folder form-type-folder" open>
-                                        <summary class="folder-header">
-                                            <span class="material-icons folder-icon">chevron_right</span>
-                                            {{ form_type|upper }} Forms ({{ forms_of_type|length }})
-                                        </summary>
-                                        <div class="folder-content form-grid">
-                                            {% for form in forms_of_type %}
-                                                {{ render_form_card(form) }}
-                                            {% endfor %}
-                                        </div>
-                                    </details>
+                                <div class="folder-content form-grid">
+                                    {% for form in student_data.forms %}
+                                        {{ render_form_card(form) }}
                                     {% endfor %}
                                 </div>
                             </details>
@@ -280,19 +264,9 @@
                             {{ student_data.name }} ({{ email }})
                             <span class="ml-2 section-badge">{{ student_data.forms|length }} forms</span>
                         </summary>
-                        <div class="folder-content">
-                            {% for form_type, forms_of_type in student_data.forms|group_by('form_type') %}
-                            <details class="folder form-type-folder" open>
-                                <summary class="folder-header">
-                                    <span class="material-icons folder-icon">chevron_right</span>
-                                    {{ form_type|upper }} Forms ({{ forms_of_type|length }})
-                                </summary>
-                                <div class="folder-content form-grid">
-                                    {% for form in forms_of_type %}
-                                        {{ render_form_card(form) }}
-                                    {% endfor %}
-                                </div>
-                            </details>
+                        <div class="folder-content form-grid">
+                            {% for form in student_data.forms %}
+                                {{ render_form_card(form) }}
                             {% endfor %}
                         </div>
                     </details>
@@ -310,19 +284,11 @@
 
     {% elif structure == 'student' %}
         {% if forms %}
-            {% for form_type, forms_of_type in forms|group_by('form_type') %}
-            <details class="folder" {% if loop.first %}open{% endif %}>
-                <summary class="folder-header">
-                    <span class="material-icons folder-icon">chevron_right</span>
-                    {{ form_type|upper }} Forms ({{ forms_of_type|length }})
-                </summary>
-                <div class="folder-content form-grid">
-                    {% for form in forms_of_type %}
-                        {{ render_form_card(form) }}
-                    {% endfor %}
-                </div>
-            </details>
-            {% endfor %}
+            <div class="grid grid-cols-1 gap-6">
+                {% for form in forms %}
+                    {{ render_form_card(form) }}
+                {% endfor %}
+            </div>
         {% else %}
             <div class="bg-white rounded-lg shadow p-6 text-center">
                 <p class="text-gray-600">No approved forms found.</p>
