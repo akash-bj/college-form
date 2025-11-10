@@ -3,3 +3,4 @@ firebase-admin
 gunicorn
 python-dotenv
 werkzeug
+requests
