@@ -401,7 +401,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 📧 Support
 
-For support, email your-email@example.com or create an issue in the repository.
+For support, email bjakash2006@example.com or create an issue in the repository.
 
 ## 🙏 Acknowledgments
 
